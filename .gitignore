@@ -1,11 +1,19 @@
-# Ignore everything
+# Ignore everything by default
 *
 
-# But not these
-!/app/
-!/assets/
-!/demos/
-!/dist/
+# Don’t ignore these folders and their contents
+!app/
+!app/**
+
+!assets/
+!assets/**
+
+!demos/
+!demos/**
+
+!dist/
+!dist/**
+
+# Don’t ignore specific files
 !index.html
 !README.md
-

@@ -1,19 +1,11 @@
-/vendor/
-/node_modules/
-/tests/
-/scripts/
-/scss/
+# Ignore everything
+*
 
-
-0.js
-1.js
-2.js
-99.js
-1.html
-
-webpack.config.js
-package.json
-package-lock.json
-componentor.js.code-workspace
-
+# But not these
+!/app/
+!/assets/
+!/demos/
+!/dist/
+!index.html
+!README.md
 

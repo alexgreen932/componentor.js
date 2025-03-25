@@ -1,4 +1,5 @@
-# Componentor.js alpha, under development
+### Componentor.js alpha, under development,
+### Not for using yet
 
 ## Changelog
 ### Versions:

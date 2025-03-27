@@ -1,10 +1,11 @@
-### Componentor.js alpha, under development,
-### Not for using yet
+# Componentor.js alpha, under development, NOT FOR USING YET
 
-## Changelog
-### Versions:
+## Changelog:
+During alpha testing versions are in CalVer(yy.mm.dd), yy is 25, but displayed 0:
+ 
+- 0.3.27 - re done event method, args, skipped creating not necessary attrs, process(getting data etc), starts only on evens(no need to process them if no event)
+- 0.3.26 - processAttr divided into handlers
 - 0.3.25 - added methods 'e' and 'proxy'(replaced function 'proxy')
-//starting from a version 0.0.3+ SemVer(Major.Minor.Patch) not used anymore, it's used CalVer(yy.mm.dd) instead... year 25 as 0, to don't confuse with a such number
-- 0.0.3 - Fix missed updateNestedProperty in processEvents
-- 0.0.2 - Fix iteration bug in j-for
-- 0.0.1 - Alpha version first release
+- 0.3.23 - Fix missed updateNestedProperty in processEvents
+- 0.3.21 - Fix iteration bug in j-for
+- 0.3.20 - Alpha version first release

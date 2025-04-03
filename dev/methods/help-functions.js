@@ -7,50 +7,41 @@ function resolveDataPath(obj, path) {
 export { resolveDataPath };
 
 //returns correct type of value passed
-export function parseArgs(argString, context) {
-console.log('argString ---- ', argString);
-console.log('argString type ---- ', typeof argString);
-	if (!argString) return [];
+export function parseArgs(argsArray, context) {
+    if (!Array.isArray(argsArray)) return [];
 
-	return argString.map(arg => {
-	console.log('arg: ', arg);
-    console.log('arg type ---- ', typeof arg);
-		arg = arg.trim();
+    return argsArray.map(arg => {
+        // Already a boolean, number, or object — return as-is
+        if (typeof arg !== 'string') return arg;
 
-		// Resolve from context if it's a property path
-		if (arg.match(/^[a-zA-Z_][a-zA-Z0-9_.]*$/)) {
-			const value = resolveDataPath(context, arg);
-			if (value !== undefined) return value;
-		}
+        let raw = arg.trim();
 
-		// Convert to boolean
-		if (arg === 'true') return true;
-		if (arg === 'false') return false;
+        // Check if it's a dynamic data path
+        if (raw.match(/^[a-zA-Z_][a-zA-Z0-9_.]*$/)) {
+            const value = resolveDataPath(context, raw);
+            if (value !== undefined) return value;
+        }
 
-		// Convert to number if it looks like one
-		if (!isNaN(arg) && arg.trim() !== '') return Number(arg);
+        // Convert to boolean
+        if (raw === 'true') return true;
+        if (raw === 'false') return false;
 
-		// Strip quotes if wrapped
-		if ((arg.startsWith('"') && arg.endsWith('"')) || (arg.startsWith("'") && arg.endsWith("'"))) {
-			return arg.slice(1, -1);
-		}
+        // Convert to number
+        if (!isNaN(raw) && raw !== '') return Number(raw);
 
-		// Return as-is
-		return arg;
-	});
+        // Strip quotes
+        if ((raw.startsWith('"') && raw.endsWith('"')) || (raw.startsWith("'") && raw.endsWith("'"))) {
+            return raw.slice(1, -1);
+        }
+
+        return raw;
+    });
 }
 
 
 
-/**
- * This function takes a string with HTML and a list of attribute prefixes,
- * and returns an object containing the parsed HTML and the matched elements.
- * @param {*} prefixes 
- * @param {*} str 
- * @param {*} type 
- * @returns 
-*/
 
+//select all elements started with any characters
 export function getElementsByAttributePrefix(prefixes, str, type = '*') {
     const parser = new DOMParser();
     const doc = parser.parseFromString(str, 'text/html');

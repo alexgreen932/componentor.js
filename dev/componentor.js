@@ -55,9 +55,13 @@ function com(args) {
 				tpl = this.doFor(tpl); // Process j-for first
 				tpl = this.doIf(tpl);  // Then process j-if
 				tpl = this.doInterpolation(tpl);
-				this.innerHTML = tpl;
+			
+				this.innerHTML = tpl; // 👉 insert into the DOM first!
+			
+				this.jModel();        // 👉 then bind live DOM elements
 				this.doEvents();
 			}
+			
 
 
 

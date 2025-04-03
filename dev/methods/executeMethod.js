@@ -29,8 +29,6 @@ export default function executeMethod(methodKey) {
             if (typeof this[methodName] === 'function') {
 
                 let parsedArguments = parseArgs(argArray, this);//todo to return correct datae
-                console.log('argArray: ', argArray);
-                console.log('parsedArguments: ', parsedArguments);
                 return this[methodName](...parsedArguments); // Execute function with arguments
                 //    this[methodName](...argArray); // Execute function with arguments
             } else {

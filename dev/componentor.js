@@ -26,7 +26,7 @@ function com(args) {
 					});
 				}
 
-				this.tpl = args.tpl || (() => `<div>Component tpl method is missing</div>`);
+				this.tpl = args.tpl || (() => `<div>Component template(tpl) is missing</div>`);
 				///this.data = this.proxy(args.data || {}); // wrap data in proxy //no need, getData makes it as main object can be not this.data only this.el, this.list any props
 				this.getData();
 				this.render();
@@ -50,7 +50,7 @@ function com(args) {
 			}
 
 			render() {
-				let tpl = this.tpl();
+				let tpl = this.template();
 				tpl = this.doAttr(tpl);
 				tpl = this.doFor(tpl); // Process j-for first
 				tpl = this.doIf(tpl);  // Then process j-if
@@ -61,9 +61,15 @@ function com(args) {
 				this.jModel();        // 👉 then bind live DOM elements
 				this.doEvents();
 			}
+
+			//execute(returns) both function and string
+			template() {
+				if (typeof this.tpl === 'function') {
+					return this.tpl();
+				}
+				return this.tpl;
+			}
 			
-
-
 
 			//add custom events app
 			e(e = this.r || 'data-updated') {

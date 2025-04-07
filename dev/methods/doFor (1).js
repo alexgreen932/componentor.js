@@ -16,29 +16,13 @@ export default function doFor(str) {
         element.removeAttribute('j-for');
 
         // Split the `j-for` value to extract the key and array
-        //OLD WAY----
-        // let idx;
-        // let [key, arr] = forValue.split(' in ').map(s => s.trim());
-        //NEW WAY----
-        let key = 'e', idx = 'i', arr = [];
+        let idx;
+        let [key, arr] = forValue.split(' in ').map(s => s.trim());
 
-        if (forValue.includes(' in ')) {// if used ' in '
-            let keyArr = forValue.split(' in ').map(s => s.trim());
-            key = keyArr[0];
-            arr = keyArr[1];
-
-            // Check if the key includes an index (e.g., `(e, i)`)
-            if (key.startsWith('(') && key.endsWith(')')) {
-                [key, idx] = key.slice(1, -1).split(',').map(s => s.trim());
-            }
-        } else {//if no key, array only
-            arr = forValue;
+        // Check if the key includes an index (e.g., `(e, i)`)
+        if (key.startsWith('(') && key.endsWith(')')) {
+            [key, idx] = key.slice(1, -1).split(',').map(s => s.trim());
         }
-        //check processing
-        console.log('key: ', key);
-        console.log('idx: ', idx);
-        console.log('arr: ', arr);
-
 
         // Resolve the array from the data
         let evalArray = resolveDataPath(this, arr);
@@ -60,7 +44,7 @@ export default function doFor(str) {
             html = html.replaceAll(/{{(.*?)}}/g, (match, p1) => {
                 // Check if the placeholder starts with the key (e.g., `e.`) or matches the index variable
                 if (p1.startsWith(`${key}.`) || p1 === idx) {
-                    // console.log('p1: ', p1);
+                // console.log('p1: ', p1);
                     // Evaluate the expression within the placeholder
                     let output = new Function(key, idx, `return ${p1}`)(item, index);
                     // console.log('output before ', output);

@@ -17,6 +17,8 @@
 !dev/
 !dev/**
 dev/docs/
+dev/app.js
+dev/index.html
 
 # Don’t ignore specific files
 !index.html

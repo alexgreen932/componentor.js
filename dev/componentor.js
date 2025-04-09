@@ -17,6 +17,12 @@ function com(args) {
 				Object.entries(componentMethods).forEach(([name, fn]) => {
 					this[name] = fn.bind(this);
 				});
+				//if component has data
+				if (this.args.data) {
+					// this.componentProperties('data', this.args.data);
+					this.data = this.proxy(this.args.data || {});
+					this.dynamicKeys.push('data');//adds key on root element of component for inner purposes(mostly, for data use el)
+				}
 
 
 				this.methods = args.methods || {};

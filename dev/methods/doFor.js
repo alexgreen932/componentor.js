@@ -1,4 +1,5 @@
-import { resolveDataPath } from './help-functions.js';
+import { resolveDataPath, cE } from './help-functions.js';
+//cE is colored console.error - usage cE(errorMassage, component)
 
 export default function doFor(str) {
     const parser = new DOMParser();
@@ -15,17 +16,15 @@ export default function doFor(str) {
         //Clean up
         element.removeAttribute('j-for');
 
-        // Split the `j-for` value to extract the key and array
-        //OLD WAY----
-        // let idx;
-        // let [key, arr] = forValue.split(' in ').map(s => s.trim());
+
         //NEW WAY----
-        let key = 'e', idx = 'i', arr = [];
+        let key = 'e', idx = 'i', arr = [];// values by default, not sure arr should be array
 
         if (forValue.includes(' in ')) {// if used ' in '
-            let keyArr = forValue.split(' in ').map(s => s.trim());
-            key = keyArr[0];
-            arr = keyArr[1];
+            // Split the `j-for` value to extract the key and array
+            let [left, right] = forValue.split(' in ').map(s => s.trim());
+            key = left;
+            arr = right;
 
             // Check if the key includes an index (e.g., `(e, i)`)
             if (key.startsWith('(') && key.endsWith(')')) {
@@ -42,12 +41,11 @@ export default function doFor(str) {
 
         // Resolve the array from the data
         let evalArray = resolveDataPath(this, arr);
-        // console.log('evalArray: ', evalArray);
+        console.log('evalArray: ', evalArray);
 
         // Check if the array is valid
         if (!Array.isArray(evalArray)) {
-            // console.error(`Component [${this.tagName}] j-for data not iterable: ${evalArray}`);
-            console.error(`%c Component [${this.tagName}]: j-for data for value "${arr}" is not iterable, output is "${evalArray}"`, 'background:#0d47a1; color: #fff; padding:3px;');//better error message
+            cE(`j-for data for value "${arr}" is not iterable, output is "${evalArray}"`,this);
             return; // Skip this element if the array is invalid
         }
 
@@ -55,6 +53,13 @@ export default function doFor(str) {
         let output = evalArray.map((item, index) => {
             let clone = element.cloneNode(true); // Clone the original element
             let html = clone.innerHTML;
+            console.log('html: ', html);
+            if (html.match(/template/i)) {
+                console.log('has template');
+            } else {
+                console.log('NO template');
+            }
+
 
             // Replace placeholders like `{{e.title}}` or `{{i}}` with actual values
             html = html.replaceAll(/{{(.*?)}}/g, (match, p1) => {

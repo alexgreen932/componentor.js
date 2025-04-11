@@ -1,14 +1,13 @@
 import { resolveDataPath, cB } from './help-functions.js';
 
 export default function getData() {
-    // console.log('get data args.data-------------', this.args.data);
-    //if component has data
-    if (this.args.data) {
-        // this.componentProperties('data', this.args.data);
-        this.data = this.proxy(this.args.data || {});
-        cB('this.data: ', this.data);
-        this.dynamicKeys.push('data');//adds key on root element of component for inner purposes(mostly, for data use el)
-    }
+    // console.log('get data args.data', this.args.data);
+    //if component has data //todo
+    // if (this.args.data) {
+    //     // this.componentProperties('data', this.args.data);
+    //     this.data = this.proxy(this.args.data || {});
+    //     this.dynamicKeys.push('data');//adds key on root element of component for inner purposes(mostly, for data use el)
+    // }
 
     let parentElement = this.getAttribute('data-parent');
 

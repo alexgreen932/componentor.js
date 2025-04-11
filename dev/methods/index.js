@@ -9,6 +9,7 @@ export { default as doIf } from './doIf.js';
 export { default as eventHandler } from './eventHandler.js';
 export { default as executeMethod } from './executeMethod.js';
 export { default as jModel } from './jModel.js';
+export { default as log } from './log.js';
 
 
 

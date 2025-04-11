@@ -8,7 +8,6 @@ export default function proxy(data) {
         set(target, property, value) {
             target[property] = value;
             const event = new Event('data-updated', { bubbles: true });
-            console.log('created event -------- ', event);
             component.dispatchEvent(event); // dispatch from the component
 
             // console.log(`%c [proxy] property "${property}" changed -> "${value}"`,'color: green'); //no log

@@ -34,14 +34,14 @@ export default function doFor(str) {
             arr = forValue;
         }
         //check processing
-        console.log('key: ', key);
-        console.log('idx: ', idx);
-        console.log('arr: ', arr);
+        // console.log('key: ', key);
+        // console.log('idx: ', idx);
+        // console.log('arr: ', arr);
 
 
         // Resolve the array from the data
         let evalArray = resolveDataPath(this, arr);
-        console.log('evalArray: ', evalArray);
+        // console.log('evalArray: ', evalArray);
 
         // Check if the array is valid
         if (!Array.isArray(evalArray)) {
@@ -53,11 +53,11 @@ export default function doFor(str) {
         let output = evalArray.map((item, index) => {
             let clone = element.cloneNode(true); // Clone the original element
             let html = clone.innerHTML;
-            console.log('html: ', html);
+            // console.log('html: ', html);
             if (html.match(/template/i)) {
-                console.log('has template');
+                // console.log('has template');
             } else {
-                console.log('NO template');
+                // console.log('NO template');
             }
 
 

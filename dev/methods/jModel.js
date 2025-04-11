@@ -14,7 +14,7 @@ export default function jModel() {
 
 		item.addEventListener('input', (e) => {
 			let newValue = e.target.value;
-			console.log('newValue: ', newValue); // now it should show!
+			// console.log('newValue: ', newValue); // now it should show!
 			updateNestedProperty(this, keyPath, newValue);
 		});
 

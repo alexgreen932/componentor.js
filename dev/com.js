@@ -1,6 +1,7 @@
 // componentor.js
 import * as componentMethods from './methods/index.js';
-import DebugTools from './functions/DebugTools.js'
+import DebugTools from './functions/DebugTools.js';
+import { resolveDataPath } from './methods/help-functions.js';
 
 /**
  * The main function for defining custom components.
@@ -44,22 +45,23 @@ function com(args) {
 
 
 
+        //todo for debug tools
         // Attach re-render listener for live updates
         if (this.r) {
-          // this.render();
+          this.render();
           // console.log(`[${this.tagName}] rerendered NOT false`);
           //todo correct for debugger
-          // document.addEventListener(this.r, () => {
-          //   console.log(`[${this.tagName}] r is ${this.r}`);
+          document.addEventListener(this.r, () => {
+            // console.log(`[${this.tagName}] r is ${this.r}`);
 
-          //   const start = performance.now();
-          //   this.render();
-          //   const end = performance.now();
-          //   // Log component re-render with performance metrics
-          //   if (app.debug) {
-          //     logComponentRender(this.tagName, end - start);
-          //   }
-          // });
+            const start = performance.now();
+            this.render();
+            const end = performance.now();
+            // Log component re-render with performance metrics
+            if (app.debug) {
+              logComponentRender(this.tagName, end - start);
+            }
+          });
         }
 
         // Execute mount hook, if any
@@ -80,22 +82,26 @@ function com(args) {
         });
 
 
-        document.addEventListener('data-updated', () => {
-          console.log(`[${this.tagName}] event catched`);
-          if (this.r === 'data-updated') {
-            console.log(`[${this.tagName}] event matches`);
-            this.render();
-          }else{
-            console.log(`[${this.tagName}] event "${this.r}" Not matches`);
-          }
-        });
+        // if (this.r) {
+        //   document.addEventListener(this.r, () => {
+        //     console.log(`[${this.tagName}] event catched`);
+        //     console.log(`[${this.tagName}] event matches`);
+        //     this.render();
+        //   });
+        // } else {
+        //   console.log(`[${this.tagName}] skipping rerender listener because r is false`);
+        // }
+
+        //end of constructor ---------
       }
 
       /**
        * Renders the component by processing the template and binding events.
        */
       render() {
+
         let tpl = this.template();
+        tpl = this.doLoader(tpl);//adds preloader if attr j-load exists
         tpl = this.doAttr(tpl);
         tpl = this.doFor(tpl); // Process j-for first
         tpl = this.doIf(tpl);  // Then process j-if
@@ -107,16 +113,6 @@ function com(args) {
         this.doEvents();       // Attach event listeners
       }
 
-      //preloader method
-      preloader(condition, tpl = null) {
-        // console.log('condition: ', condition);
-
-        if (condition) return;
-        if (tpl) return tpl;
-        return `<div>Loading...</div>`;
-        //to add a listener if this.loadTpl not false, null or '' rerendering by calling this.render()  
-
-      }
 
       /**
        * Returns the template HTML.

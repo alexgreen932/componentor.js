@@ -1,9 +1,11 @@
 # Componentor.js alpha, under development, NOT FOR USING YET
+## Jet.Js now
 
 ## Changelog:
 During alpha testing versions numbers are in CalVer(yy.mm.dd), yy is 25, but displayed 0:
- 
-- 0.4.? - j-for simplify and process template tag
+
+ - 0.4.12 - j-load(preloader) directive added
+- 0.4.8 - j-for simplify and process template tag
 - 0.4.4 - tpl property simplify
 - 0.4.2 - fixed execute function in j-if
 - 0.3.28 - refactored methods(changing names, done Auto-bind all imported component methods)

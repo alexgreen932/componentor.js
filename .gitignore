@@ -14,11 +14,19 @@
 !dist/
 !dist/**
 
-!dev/
-!dev/**
-dev/docs/
-dev/app.js
-dev/index.html
+!dev/functions/
+!dev/functions/**
+!dev/methods/
+!dev/methods/**
+!dev/tools/
+!dev/tools/**
+!dev/app.js
+!dev/jet-dev.js
+!dev/com.js
+!dev/index.html
+
+
+
 
 # Don’t ignore specific files
 !index.html

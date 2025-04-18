@@ -1,4 +1,5 @@
-import { updateNestedProperty } from './help-functions.js';
+// jModel.js
+import { updateNestedProperty, resolveDataPath} from './help-functions.js';
 
 export default function jModel() {
 	const items = this.querySelectorAll('[j-model]');
@@ -6,7 +7,7 @@ export default function jModel() {
 
 	items.forEach(item => {
 		const keyPath = item.getAttribute('j-model');
-		let propValue = this.getDynamicData(keyPath);
+		let propValue = resolveDataPath(this, keyPath);
 
 		if (propValue !== undefined) {
 			item.value = propValue;
@@ -14,11 +15,9 @@ export default function jModel() {
 
 		item.addEventListener('input', (e) => {
 			let newValue = e.target.value;
-			// console.log('newValue: ', newValue); // now it should show!
-			updateNestedProperty(this, keyPath, newValue);
+			updateNestedProperty(this, keyPath, newValue); // updates proxied this.keyPath
 		});
 
-		item.removeAttribute('j-model'); // optional
+		item.removeAttribute('j-model');
 	});
 }
-

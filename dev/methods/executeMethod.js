@@ -1,4 +1,4 @@
-import { parseArgs, cB, cD, cG, cR } from './help-functions.js'
+import { parseArgs } from './help-functions.js'
 
 //execute method function on component event
 export default function executeMethod(methodKey) {
@@ -36,7 +36,7 @@ export default function executeMethod(methodKey) {
             }
         }
     } else {
-        //something for log
+        app.pushLog('detect_function_error', ` [${this.tagName}] ${methodName} is not a function`);
     }
 }
 

@@ -1,30 +1,30 @@
-export function hookConsoleError() {
-	const original = console.error;
-	console.error = function (...args) {
-		app.errors.push(args.join(' '));
-		app._updateErrorIcon?.();
-		original.apply(console, args);
-	};
-}
+// export function hookConsoleError() {
+// 	const original = console.error;
+// 	console.error = function (...args) {
+// 		app.errors.push(args.join(' '));
+// 		app._updateErrorIcon?.();
+// 		original.apply(console, args);
+// 	};
+// }
 
-export function hookConsoleWarn() {
-	const original = console.warn;
-	console.warn = function (...args) {
-		app.warnings.push(args.join(' '));
-		app._updateWarnIcon?.();
-		original.apply(console, args);
-	};
-}
+// export function hookConsoleWarn() {
+// 	const original = console.warn;
+// 	console.warn = function (...args) {
+// 		app.warnings.push(args.join(' '));
+// 		app._updateWarnIcon?.();
+// 		original.apply(console, args);
+// 	};
+// }
 
-export function hookConsoleLog() {
-	const original = console.log;
-	console.log = function (...args) {
-		app.logs = app.logs || [];
-		app.logs.push(args.map(String).join(' '));
-		app._updateLogIcon?.();
-		// original.apply(console, args);
-	};
-}
+// export function hookConsoleLog() {
+// 	const original = console.log;
+// 	console.log = function (...args) {
+// 		app.logs = app.logs || [];
+// 		app.logs.push(args.map(String).join(' '));
+// 		app._updateLogIcon?.();
+// 		// original.apply(console, args);
+// 	};
+// }
 
 
 export function hookGlobalErrors() {

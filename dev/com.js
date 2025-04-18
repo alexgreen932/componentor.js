@@ -1,64 +1,97 @@
-// componentor.js
+// com.js
+// Jet.js Component Definition System
+
 import * as componentMethods from './methods/index.js';
 import DebugTools from './functions/DebugTools.js';
 import { resolveDataPath } from './methods/help-functions.js';
 
 /**
- * The main function for defining custom components.
- * It uses your provided options (args) to set up the component.
+ * Main function to register a custom Jet component
+ * @param {Object} args - Component definition object
  */
 function com(args) {
   customElements.define(
     args.name,
     class extends HTMLElement {
       constructor() {
-        super();
+        super(); // Always call super() in custom element constructor
 
-        // Store component arguments and set up properties
+        // 1. Store provided options
         this.args = args;
-        this.dynamicKeys = [];
-        this.r = 'r' in args ? args.r : 'data-updated';
+        this.methods = args.methods || {}; // Local methods
+        this.r = 'r' in args ? args.r : 'data-updated'; // Reactive event name
+        this.$data = args.data || {};
 
-        // Auto-bind imported component methods from "./methods/index.js"
+        // Reserved keys we should never overwrite with user data
+				const reserved = [
+					'args', 'methods', 'r', 'tpl', 'render', 'connectedCallback',
+					'disconnectedCallback', 'e', 'log', 'l', 'proxy', 'querySelector',
+					'querySelectorAll', 'jModel', ...Object.keys(componentMethods)
+				];
+
+        //css add style if property args.css is provided
+        if (args.css) {
+          const id = `jet-style-${args.name}`;
+          if (!document.getElementById(id)) {
+            const style = document.createElement('style');
+            style.id = id;
+            style.innerText = args.css;
+            document.head.appendChild(style);
+          }
+        }
+
+
+
+        // 2. Bind shared utility methods from './methods/index.js'
         Object.entries(componentMethods).forEach(([name, fn]) => {
           this[name] = fn.bind(this);
         });
 
-        //aliases to method for shorthand //todo remove both l abd log use trace instead
-        this.l = this.log;
+        //new data
+        const proxyData = this.proxy(this.$data);
 
-        // NETHODS Bind local component methods if provided in args
-        this.methods = args.methods || {};
-        if (args.methods) {
-          Object.entries(args.methods).forEach(([key, fn]) => {
-            this[key] = fn.bind(this);
-          });
+				for (const [key, value] of Object.entries(proxyData)) {
+					if (!reserved.includes(key)) {
+						this[key] = value;
+					}
+				}
+
+        //used in child components
+        this.processProps();
+
+
+
+        //activate save data in localstorage if property provided
+        if (args.saveLocally) {
+          console.log('args.saveLocally: ', args.saveLocally);
+          const localArgs = typeof args.saveLocally === 'function' ? args.saveLocally.call(this) : args.saveLocally;
+          this.setupLocalSave(localArgs);
         }
 
+        // 3. Bind local component methods
+        Object.entries(this.methods).forEach(([name, fn]) => {
+          this[name] = fn.bind(this);
+        });
 
-        // Set template function (or provide a fallback)
+        // 4. Shorthand aliases (optional, can be removed later)
+        this.l = this.log;//todo remove
+
+        // 5. Lifecycle: created()
+        if (typeof args.created === 'function') {
+          args.created.call(this);
+        }
+
+        // 6. Register lifecycle hooks for later
+        if (typeof args.updated === 'function') this.updated = args.updated;
+        if (typeof args.destroyed === 'function') this.destroyed = args.destroyed;
+        if (typeof args.connected === 'function') this.connected = args.connected;
+
         this.tpl = args.tpl || (() => `<div>Component template (tpl) is missing</div>`);
+        // 7. Prepare data + render component
 
-                // ✅ LIFECYCLE: call created() if present
-                if (typeof args.created === 'function') {
-                  args.created.call(this);
-                }
-        
-                // ✅ Add updated & destroyed to instance (if provided)
-                if (typeof args.updated === 'function') {
-                  this.updated = args.updated;
-                }
-                if (typeof args.destroyed === 'function') {
-                  this.destroyed = args.destroyed;
-                }
+        this.render();  // Do first render before mount
 
-        // Prepare data and initial render
-        this.getData();  // Assumes getData() defined in your component methods or args
-        this.render();
-        this.simple_reactivity();
-
-        //LIFECYCLE: mount
-        // Execute mount hook, if any
+        // 9. Lifecycle: mount()
         if (args.mount) {
           if (typeof args.mount === 'function') {
             args.mount.call(this);
@@ -69,119 +102,93 @@ function com(args) {
 
 
 
-        //todo for debug tools
-        // Attach re-render listener for live updates
+        // 10. Setup global re-render listener if "r" is defined (default: 'data-updated')
         if (this.r) {
-          this.render();
-          // console.log(`[${this.tagName}] rerendered NOT false`);
-          //todo correct for debugger
           document.addEventListener(this.r, () => {
-            // console.log(`[${this.tagName}] r is ${this.r}`);
-
             const start = performance.now();
             this.render();
+            // console.log(`%c"[${this.tagName}]" reRendered data current_page is "${this.data.current_page}, title ia "${this.data.current_page_title}"`, 'background:#00f; color:#fff; padding:3px; font-weight:bold;');         
             const end = performance.now();
-            // Log component re-render with performance metrics
-            if (app.debug) {
+            //TODO DEBAG
+            if (app.devtoolsEnabled) {
               logComponentRender(this.tagName, end - start);
             }
           });
         }
 
-        // Live component inspector:
-        // Clicking the component while holding Ctrl triggers an inspect action.
+        // 11. Debug inspect mode (Ctrl+Click)
         this.addEventListener('click', (e) => {
-          if (app.debug && e.ctrlKey) {
+          if (app.devtoolsEnabled && e.ctrlKey) {
             app.inspectComponent(this);
           }
         });
+        //end of constructor 
+      }
 
+      // Native lifecycle hook: element added to DOM
+      connectedCallback() {
+        if (typeof this.connected === 'function') {
+          this.connected();
+        }
+      }
 
-        // if (this.r) {
-        //   document.addEventListener(this.r, () => {
-        //     console.log(`[${this.tagName}] event catched`);
-        //     console.log(`[${this.tagName}] event matches`);
-        //     this.render();
-        //   });
-        // } else {
-        //   console.log(`[${this.tagName}] skipping rerender listener because r is false`);
-        // }
-
-        //end of constructor ---------
+      // Native lifecycle hook: element removed from DOM
+      disconnectedCallback() {
+        if (typeof this.destroyed === 'function') {
+          this.destroyed();
+        }
       }
 
       /**
-       * Renders the component by processing the template and binding events.
+       * Renders component HTML
        */
       render() {
+        // console.log(`%c"[${this.tagName}]" rendered data current_page is "${this.data.current_page}, title ia "${this.data.current_page_title}"`, 'background:#0f0; padding:3px; font-weight:bold;');
+        let tpl = this.template();             // Get raw template string
+        tpl = this.doLoader(tpl);              // Handle j-load
+        tpl = this.doAttr(tpl);                // Handle j-attr (if any)
+        tpl = this.doFor(tpl);                 // Handle j-for loops
+        tpl = this.doIf(tpl);                  // Handle j-if conditions
+        tpl = this.doInterpolation(tpl);       // Replace {{}} with actual data
 
-        let tpl = this.template();
-        tpl = this.doLoader(tpl);//adds preloader if attr j-load exists
-        tpl = this.doAttr(tpl);
-        tpl = this.doFor(tpl); // Process j-for first
-        tpl = this.doIf(tpl);  // Then process j-if
-        tpl = this.doInterpolation(tpl);
-
-        this.innerHTML = tpl;  // Insert into the DOM
-
-        this.jModel();         // Bind live DOM elements
-        this.doEvents();       // Attach event listeners
+        this.innerHTML = tpl;                  // Inject into DOM
+        this.jModel();                         // Two-way binding support
+        this.doEvents();                       // Add event listeners (@click, etc.)
       }
 
-
       /**
-       * Returns the template HTML.
+       * Returns the component's HTML template string
        */
       template() {
         return typeof this.tpl === 'function' ? this.tpl() : this.tpl;
       }
 
       /**
-       * Dispatches a custom event to trigger reactivity.
+       * Triggers reactivity event manually
        */
       e(eventName = this.r || 'data-updated') {
         const event = new Event(eventName, { bubbles: true });
-        // console.log('eventName------------- ', eventName);
         this.dispatchEvent(event);
       }
 
-      /**
-       * Sets up simple reactivity on dynamic keys.
-       */
-      simple_reactivity() {
-        let keys = this.dynamicKeys;
-        keys.forEach(key => {
-          const events = ['change', 'input', 'select', 'keyup'];
-          let dynamicObj = this[key];
-          events.forEach(event => {
-            this.addEventListener(event, e => {
-              if (dynamicObj && e.target.id) {
-                dynamicObj[e.target.id] = e.target.value;
-              }
-            });
-          });
-        });
-      }
     }
   );
 
-  // Register component information in the debug log if debug is active
-  if (typeof app !== 'undefined' && app.debug) {
+  // Add to debug panel if in dev mode
+  if (typeof app !== 'undefined' && app.devtoolsEnabled) {
     app.components.push({
       name: args.name,
       data: args.data || {},
       methods: args.methods ? Object.keys(args.methods) : [],
-      renders: 1 // initial render count
+      renders: 1
     });
   }
 }
 
 /**
- * Logs a render update for a component.
- * It updates the render count and records the last render time.
+ * Debug helper: Track render performance and count
  */
 function logComponentRender(name, renderTime) {
-  // Find the component in the debug log and update render count
   let comp = app.components.find(c => c.name.toUpperCase() === name.toUpperCase());
   if (comp) {
     comp.renders = (comp.renders || 0) + 1;
@@ -189,6 +196,12 @@ function logComponentRender(name, renderTime) {
   }
 }
 
-// Export the 'com' function for module usage
-export { com };
+// Restore Ctrl+Click inspect
+// doublicated
+// this.addEventListener('click', (e) => {
+//   if (e.ctrlKey && typeof app.inspectComponent === 'function') {
+//     app.inspectComponent(this);
+//   }
+// });
 
+export { com };

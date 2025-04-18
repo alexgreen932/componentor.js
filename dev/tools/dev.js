@@ -9,19 +9,19 @@ function randomStyle() {
 	return styles[Math.floor(Math.random() * styles.length)];
 }
 
-	console.log('dev loaded');	
+	// console.log('dev loaded');
 //global app.dev.func_name
 export const dev = {
 	//check data in interval 
 	check: (v, msg = null, interval = 2000) => {
 
-		console.log('dev check works');	
+		// console.log('dev check works');
 		if (!msg) {
 			msg = 'Data Check: ';
 		}
 		let style = 'background:#512da8; color:#fff; padding:3px; font-weight:bold;';
 		setInterval(() => {
-			console.log(`%c${msg} `, style, v);
+			// console.log(`%c${msg} `, style, v);
 		}, interval);
 	},
 

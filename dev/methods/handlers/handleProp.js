@@ -1,7 +1,7 @@
 import { resolveDataPath } from '../help-functions.js';
 
 
-export function handleAt(el, attr, value, context) {
+export function handleProp(el, attr, value, context) {
 	const event = attr.name.slice(1);
 	el.setAttribute('element-event', event);
 	el.setAttribute('event-data', value);
@@ -23,10 +23,10 @@ export function handleAt(el, attr, value, context) {
 			}
             //old way
 			// if (match[2] && match[2].includes(',')) {
-			// 	args = match[2].split(',').map(arg => context.getDynamicData(arg)).join(', ');
+			// 	args = match[2].split(',').map(arg => context.resolveDataPath(this, arg)).join(', ');
             //     console.log('multi args ', args);
 			// } else if (match[2]) {
-			// 	args = context.getDynamicData(match[2]);
+			// 	args = context.resolveDataPath(this, match[2]);
             //     console.log('single arg ', args);
 			// }
 			el.setAttribute('data-event', event);
@@ -42,10 +42,6 @@ export function handleAt(el, attr, value, context) {
 
 export function handleEl(el, attr, value, context) {
 	el.setAttribute('data-parent', context.tagName.toLowerCase());
-}
-
-export function handleProp(el, attr, value, context) {
-	el.setAttribute('parent-data', context.tagName.toLowerCase());
 }
 
 export function handleColon(el, attr, value, context) {

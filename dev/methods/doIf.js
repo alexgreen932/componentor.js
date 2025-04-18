@@ -1,4 +1,4 @@
-import { getMultiValue, cB } from './help-functions.js'
+import { getMultiValue, removeQuotes } from './help-functions.js'
 
 //todo rm alt
 export default function doIf(tpl, alt = null) {
@@ -10,6 +10,7 @@ export default function doIf(tpl, alt = null) {
 
     items.forEach(item => {
         const str = item.getAttribute('j-if');
+        console.log('str: ', str);
         let condition, value;
 
         if (str.match(/^([a-zA-Z0-9_]+)\((.*?)\)$/)) {
@@ -18,7 +19,9 @@ export default function doIf(tpl, alt = null) {
         } else if (str.includes('==') || str.includes('!==')) {
             [condition, value] = str.split('==');
             condition = this.getDynamicData(condition.replace('!', '').trim());
-            value = this.getDynamicData(value.trim());
+            console.log('condition: ', condition);
+            value = this.getDynamicData(removeQuotes(value.trim()));
+            console.log('value: ', value);
         } else {
             condition = this.getDynamicData(str.trim()); 
         }

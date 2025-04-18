@@ -1,3 +1,3 @@
-export default function navigateApp(){
+export default function inspectComponent(){
 
 }

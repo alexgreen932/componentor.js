@@ -4,6 +4,9 @@
 ## Changelog:
 During alpha testing versions numbers are in CalVer(yy.mm.dd), yy is 25, but displayed 0:
 
+
+
+- 0.4.16 - Added setupLocalSave Method
 - 0.4.12 - j-load(preloader) directive added
 - 0.4.8 - j-for simplify and process template tag
 - 0.4.4 - tpl property simplify

@@ -6,6 +6,14 @@ function resolveDataPath(obj, path) {
 }
 export { resolveDataPath };
 
+
+export function removeQuotes(str) {
+    if ((str.startsWith('"') && str.endsWith('"')) || (str.startsWith("'") && str.endsWith("'"))) {
+        return str.slice(1, -1);
+    }
+    return str;
+}
+
 //returns correct type of value passed
 export function parseArgs(argsArray, context) {
     if (!Array.isArray(argsArray)) return [];

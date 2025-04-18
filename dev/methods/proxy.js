@@ -1,26 +1,46 @@
-
 export default function proxy(data) {
-    const component = this;
-    return new Proxy(data, {
-        get(target, key) {
-            return target[key];
-        },
-        set(target, key, value) {
-            target[key] = value;// Trigger the updated hook
+	const component = this;
 
-            if (typeof component.updated === 'function') {
-                component.updated(key, value);
-                //TODO add push  to devTools for watching
-            }
-            const event = new Event('data-updated', { bubbles: true });
-            //TODO add push  to devTools for watching
-            console.log('created event -------- ', event);
-            component.dispatchEvent(event); // dispatch from the component
+	return new Proxy(data, {
+		get(target, key) {
+			if (key in target) {
+				return target[key];
+			}
 
-            // console.log(`%c [proxy] key "${key}" changed -> "${value}"`,'color: green'); //no log
-            return true;
-        }
-    });
+			// Log and return default value if property is missing
+			const logMsg = `[proxy] missed property "${key}", returning default ""`;
+			console.warn(logMsg);
+			if (typeof app?.pushLog === 'function') {
+				app.pushLog('prop_missed', logMsg);
+			}
+			return '';
+		},
+
+		set(target, key, value) {
+			// Optional: Avoid unnecessary updates
+			if (target[key] === value) return true;
+
+			target[key] = value;
+
+			// Debug log
+			console.log(`[proxy] "${key}" set to "${value}"`);
+			if (typeof app?.pushLog === 'function') {
+				app.pushLog('proxy', `"${key}" set to "${value}"`);
+			}
+
+			// Optional updated hook
+			if (typeof component.updated === 'function') {
+				component.updated(key, value);
+			}
+
+			// Fire reactive update event
+			const event = new Event('data-updated', { bubbles: true });
+			if (app?.debug) {
+				console.log(`[proxy] dispatching "data-updated" for "${key}"`);
+			}
+			component.dispatchEvent(event);
+
+			return true;
+		}
+	});
 }
-
-

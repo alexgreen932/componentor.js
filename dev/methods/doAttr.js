@@ -1,9 +1,10 @@
-import { handleEl, handleColon, handleAt } from './handlers/attrHandlers.js';
+import { handleEl, handleColon, handleAt, handleProp } from './handlers/attrHandlers.js';
 
-
+//todo re el if used prop
 const handlers = {
 	'el': handleEl,
 	'el:': handleEl, // in case you also use el:
+	'prop:': handleProp, // in case you also use prop:
 	':': handleColon,
 	'@': handleAt,
 };
@@ -26,7 +27,7 @@ function getElementsByAttributePrefix(prefixes, str, type = '*') {
 }
 
 export default function doAttr(tpl) {
-	const { doc, matchedElements } = getElementsByAttributePrefix(['el', ':', '@'], tpl);
+	const { doc, matchedElements } = getElementsByAttributePrefix(['el', 'prop:', ':', '@'], tpl);
 
 	matchedElements.forEach(el => {
 		Array.from(el.attributes).forEach(attr => {
@@ -34,7 +35,7 @@ export default function doAttr(tpl) {
 			for (const prefix in handlers) {
 				if (attr.name.startsWith(prefix)) {
 					handlers[prefix](el, attr, value, this); // pass context
-					el.removeAttribute(attr.name);
+					// el.removeAttribute(attr.name);
 					break;
 				}
 			}

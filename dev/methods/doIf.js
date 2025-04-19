@@ -18,12 +18,12 @@ export default function doIf(tpl, alt = null) {
             // console.log(`str "${str}" matches and returns →`, condition, typeof condition);
         } else if (str.includes('==') || str.includes('!==')) {
             [condition, value] = str.split('==');
-            condition = this.getDynamicData(condition.replace('!', '').trim());
+            condition = resolveDataPath(this, condition.replace('!', '').trim());
             console.log('condition: ', condition);
-            value = this.getDynamicData(removeQuotes(value.trim()));
+            value = resolveDataPath(this, removeQuotes(value.trim()));
             console.log('value: ', value);
         } else {
-            condition = this.getDynamicData(str.trim()); 
+            condition = resolveDataPath(this, str.trim()); 
         }
 
         // Remove based on result

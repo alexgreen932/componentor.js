@@ -62,7 +62,21 @@ export default function doFor(str) {
 
 
             // Replace placeholders like `{{e.title}}` or `{{i}}` with actual values
-            html = html.replaceAll(/{{(.*?)}}/g, (match, p1) => {
+            // html = html.replaceAll(/\[([^\[\]]+?)\]/g, (match, p1) => {
+            //     // Replace [e.something] and [i] only inside {{...}}
+            //     const replaced = p1.replace(/\[([^\[\]]+?)\]/g, (__, expr) => {
+            //         try {
+            //             return new Function(key, idx, `return ${expr}`)(item, index);
+            //         } catch (e) {
+            //             cE(`Error in j-for interpolation [${expr}]: ` + e.message);
+            //             return '';
+            //         }
+            //     });
+            //     // The result should now be safe: isActive(something)
+            //     return replaced;
+            // });
+            
+            html = html.replaceAll(/\[([^\[\]]+?)\]/g, (match, p1) => {
                 // Check if the placeholder starts with the key (e.g., `e.`) or matches the index variable
                 if (p1.startsWith(`${key}.`) || p1 === idx) {
                     // console.log('p1: ', p1);

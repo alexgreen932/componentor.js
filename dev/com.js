@@ -22,12 +22,6 @@ function com(args) {
         this.r = 'r' in args ? args.r : 'data-updated'; // Reactive event name
         this.$data = args.data || {};
 
-        // Reserved keys we should never overwrite with user data
-				const reserved = [
-					'args', 'methods', 'r', 'tpl', 'render', 'connectedCallback',
-					'disconnectedCallback', 'e', 'log', 'l', 'proxy', 'querySelector',
-					'querySelectorAll', 'jModel', ...Object.keys(componentMethods)
-				];
 
         //css add style if property args.css is provided
         if (args.css) {
@@ -48,13 +42,36 @@ function com(args) {
         });
 
         //new data
-        const proxyData = this.proxy(this.$data);
 
-				for (const [key, value] of Object.entries(proxyData)) {
-					if (!reserved.includes(key)) {
-						this[key] = value;
-					}
-				}
+        // Reserved keys we should never overwrite with user data and user methods
+        const reserved = [
+          'args', 'methods', 'r', 'tpl', 'render', 'connectedCallback',
+          'disconnectedCallback', 'e', 'log', 'l', 'proxy', 'querySelector',
+          'querySelectorAll', 'jModel', ...Object.keys(componentMethods)
+        ];
+
+        this.proxyData = this.proxy(this.$data); // Optional: keep a reference for debugging
+
+        for (const key in this.proxyData) {
+          if (!reserved.includes(key)) {
+            Object.defineProperty(this, key, {
+              get: () => this.proxyData[key],
+              set: (val) => { this.proxyData[key] = val }
+            });
+          }
+        }
+
+
+        // Bind local component methods
+        Object.entries(this.methods).forEach(([name, fn]) => {
+          if (!reserved.includes(name)) {
+            this[name] = fn.bind(this);
+          } else {
+            //todo add pusLog
+          }
+
+        });
+
 
         //used in child components
         this.processProps();
@@ -68,10 +85,6 @@ function com(args) {
           this.setupLocalSave(localArgs);
         }
 
-        // 3. Bind local component methods
-        Object.entries(this.methods).forEach(([name, fn]) => {
-          this[name] = fn.bind(this);
-        });
 
         // 4. Shorthand aliases (optional, can be removed later)
         this.l = this.log;//todo remove
@@ -143,7 +156,6 @@ function com(args) {
        * Renders component HTML
        */
       render() {
-        // console.log(`%c"[${this.tagName}]" rendered data current_page is "${this.data.current_page}, title ia "${this.data.current_page_title}"`, 'background:#0f0; padding:3px; font-weight:bold;');
         let tpl = this.template();             // Get raw template string
         tpl = this.doLoader(tpl);              // Handle j-load
         tpl = this.doAttr(tpl);                // Handle j-attr (if any)

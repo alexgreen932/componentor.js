@@ -1,46 +1,56 @@
 export default function proxy(data) {
-	const component = this;
-
-	return new Proxy(data, {
-		get(target, key) {
-			if (key in target) {
-				return target[key];
-			}
-
-			// Log and return default value if property is missing
-			const logMsg = `[proxy] missed property "${key}", returning default ""`;
-			console.warn(logMsg);
-			if (typeof app?.pushLog === 'function') {
-				app.pushLog('prop_missed', logMsg);
-			}
-			return '';
-		},
-
-		set(target, key, value) {
-			// Optional: Avoid unnecessary updates
-			if (target[key] === value) return true;
-
-			target[key] = value;
-
-			// Debug log
-			console.log(`[proxy] "${key}" set to "${value}"`);
-			if (typeof app?.pushLog === 'function') {
-				app.pushLog('proxy', `"${key}" set to "${value}"`);
-			}
-
-			// Optional updated hook
-			if (typeof component.updated === 'function') {
-				component.updated(key, value);
-			}
-
-			// Fire reactive update event
-			const event = new Event('data-updated', { bubbles: true });
-			if (app?.debug) {
-				console.log(`[proxy] dispatching "data-updated" for "${key}"`);
-			}
-			component.dispatchEvent(event);
-
-			return true;
-		}
-	});
-}
+    const component = this;
+    const seen = new WeakMap();
+  
+    function createProxy(target, path = '') {
+      if (typeof target !== 'object' || target === null) return target;
+      if (seen.has(target)) return seen.get(target);
+  
+      const handler = {
+        get(obj, key) {
+          const value = obj[key];
+          if (typeof value === 'object' && value !== null) {
+            return createProxy(value, `${path}${key}.`);
+          }
+          if (!(key in obj)) {
+            const logMsg = `[proxy] missed property "${path}${key}", returning default ""`;
+            console.warn(logMsg);
+            if (typeof app?.pushLog === 'function') {
+              app.pushLog('prop_missed', logMsg);
+            }
+            return '';
+          }
+          return value;
+        },
+        set(obj, key, value) {
+          if (obj[key] === value) return true;
+          obj[key] = value;
+  
+          const fullPath = `${path}${key}`;
+          console.log(`[proxy] "${fullPath}" set to "${value}"`);
+          if (typeof app?.pushLog === 'function') {
+            app.pushLog('proxy', `"${fullPath}" set to "${value}"`);
+          }
+  
+          if (typeof component.updated === 'function') {
+            component.updated(fullPath, value);
+          }
+  
+          const event = new Event('data-updated', { bubbles: true });
+          if (app?.debug) {
+            console.log(`[proxy] dispatching "data-updated" for "${fullPath}"`);
+          }
+          component.dispatchEvent(event);
+  
+          return true;
+        }
+      };
+  
+      const proxy = new Proxy(target, handler);
+      seen.set(target, proxy);
+      return proxy;
+    }
+  
+    return createProxy(data);
+  }
+  

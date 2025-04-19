@@ -12,7 +12,7 @@ export { default as executeMethod } from './executeMethod.js';
 export { default as jModel } from './jModel.js';
 export { default as doLoader } from './doLoader.js';
 export { default as setupLocalSave } from './setupLocalSave.js';
-export { default as log } from './log.js';
+export { default as log } from './log.js';//todo ???
 // export { default as d } from './d.js';//TODO rm file as will
 
 

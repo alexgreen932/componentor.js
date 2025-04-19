@@ -1,4 +1,4 @@
-import { parseArgs } from './help-functions.js'
+import { parseArgs, isStaticOrDynamic } from './help-functions.js'
 
 //execute method function on component event
 export default function executeMethod(methodKey) {
@@ -9,18 +9,16 @@ export default function executeMethod(methodKey) {
         let args = null;
         if (match[2]) {
             args = match[2];
+            console.log('args: ', args);
             if (args) {
                 if (args.includes(',')) {
                     args.split(',').forEach(arg => {
                         arg = arg.trim();
-                        let val = this.getDynamicData(arg);
-                        argArray.push(val);
+                        argArray.push(isStaticOrDynamic(this, arg));                      
                     });
-
                 } else {
-                    let val = this.getDynamicData(args);
-                    argArray.push(val);
-
+                    argArray.push(isStaticOrDynamic(this, args));  
+                    console.log('isStaticOrDynamic(this, args) single ----- ', isStaticOrDynamic(this, args));
                 }
             }
         }
@@ -39,5 +37,7 @@ export default function executeMethod(methodKey) {
         app.pushLog('detect_function_error', ` [${this.tagName}] ${methodName} is not a function`);
     }
 }
+
+
 
 

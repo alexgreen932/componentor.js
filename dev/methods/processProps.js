@@ -1,6 +1,6 @@
 import { resolveDataPath, cB } from './help-functions.js';
 
-console.log('process props loaded');
+// console.log('process props loaded');
 export default function processProps() {
     // console.log('process props loaded inside');
 
@@ -21,13 +21,13 @@ export default function processProps() {
         if (attr.name.startsWith('prop:')) {
             const key = attr.name.slice(5);
             console.log('key: ', key);
-            const dynamicData = resolveDataPath(parent.data, attr.value);
+            const dynamicData = resolveDataPath(parent, attr.value);
             console.log('attr.value: ', attr.value);
             console.log('dynamicData: ', dynamicData);
 
 
             if (dynamicData !== undefined) {
-                this.data[key] = this.proxy(dynamicData || {});
+                this[key] = this.proxy(dynamicData || {});
                 //add found keys to dynamicKeys
                 // this.dynamicKeys.push(key);
             } else {

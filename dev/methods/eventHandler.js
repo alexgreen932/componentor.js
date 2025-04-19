@@ -7,7 +7,7 @@ export default function eventHandler(eventData) {
     if (eventData.includes('=')) {
         //changing property value
         let [prop, new_value] = eventData.split('=').map(s => s.trim());
-        new_value = this.getDynamicData(new_value);
+        new_value = resolveDataPath(this, new_value);
         updateNestedProperty(this, prop, new_value);
     } else {
         //execute function

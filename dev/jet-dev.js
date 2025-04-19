@@ -17,6 +17,8 @@ function logComponentRender(name, renderTime) {
   }
 }
 
+//set com as global
+window.com = com;
 // Expose the app globally (default debug is off here)
 (function (global) {
   global.app = {
@@ -60,6 +62,12 @@ function pushLog(type, message) {
 app.pushLog = pushLog;
 //todo think to remove on prod
 window.devtools = () => app.devConsole();
+
+
+//This function reconstructs the string and returns it untouched.
+//return html uses for vs plugin prettier only
+window.html = (strings, ...values) =>
+  strings.reduce((out, str, i) => out + str + (values[i] ?? ''), '');
 
 // app.components
 // console.log('app.components: ', app.components);

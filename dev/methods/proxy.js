@@ -35,6 +35,7 @@ export default function proxy(data) {
           if (typeof component.updated === 'function') {
             component.updated(fullPath, value);
           }
+          console.log(`[proxy] dispatching "data-updated" for "${fullPath}"`);
   
           const event = new Event('data-updated', { bubbles: true });
           if (app?.debug) {

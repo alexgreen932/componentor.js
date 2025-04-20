@@ -19,6 +19,20 @@ function com(args) {
         // 1. Store provided options
         this.args = args;
         this.methods = args.methods || {}; // Local methods
+
+        // Event listeners setup (if any)
+        this._boundListeners = [];
+        if (Array.isArray(args.listeners)) {
+          for (let [target, event, handlerName] of args.listeners) {
+            const fn = this.methods?.[handlerName] || (() => { });
+            if (typeof fn === 'function') {
+              const boundFn = fn.bind(this);
+              target.addEventListener(event, boundFn);
+              this._boundListeners.push([target, event, boundFn]);
+            }
+          }
+        }
+
         this.r = 'r' in args ? args.r : 'data-updated'; // Reactive event name
         this.$data = args.data || {};
 
@@ -99,7 +113,7 @@ function com(args) {
         if (typeof args.destroyed === 'function') this.destroyed = args.destroyed;
         if (typeof args.connected === 'function') this.connected = args.connected;
 
-        this.tpl = args.tpl || (() => `<div>Component template (tpl) is missing</div>`);
+        this.tpl = args.tpl || (() => `<div><strong>Component "${this.tagName}" template (tpl) is missing</strong></div>`);
         // 7. Prepare data + render component
 
         this.render();  // Do first render before mount
@@ -150,7 +164,15 @@ function com(args) {
         if (typeof this.destroyed === 'function') {
           this.destroyed();
         }
+      
+        // Remove bound global event listeners
+        // if (Array.isArray(this._boundListeners)) {
+        //   for (let [target, event, fn] of this._boundListeners) {
+        //     target.removeEventListener(event, fn);
+        //   }
+        // }
       }
+      
 
       /**
        * Renders component HTML
@@ -181,6 +203,7 @@ function com(args) {
       e(eventName = this.r || 'data-updated') {
         const event = new Event(eventName, { bubbles: true });
         this.dispatchEvent(event);
+        console.log('event created ----- ', event);      
       }
 
     }

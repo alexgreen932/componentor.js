@@ -1,43 +1,45 @@
-import { parseArgs, isStaticOrDynamic } from './help-functions.js'
+import { parseArgs, isStaticOrDynamic } from './help-functions.js';
 
-//execute method function on component event
-export default function executeMethod(methodKey) {
+// Executes a method call like `doSomething(arg)` or `app.globFunc(x, y)`
+export default function executeMethod(methodKey, conditions = {}) {
     let methodName, args = null, argArray = [];
-    const match = methodKey.match(/^([a-zA-Z0-9_]+)\((.*?)\)$/);
+
+    // Match method calls like app.globFunc('hello', 123)
+    const match = methodKey.match(/^([a-zA-Z0-9_.]+)\((.*?)\)$/);
+
     if (match) {
-        methodName = match[1];
-        let args = null;
-        if (match[2]) {
-            args = match[2];
-            console.log('args: ', args);
-            if (args) {
-                if (args.includes(',')) {
-                    args.split(',').forEach(arg => {
-                        arg = arg.trim();
-                        argArray.push(isStaticOrDynamic(this, arg));                      
-                    });
-                } else {
-                    argArray.push(isStaticOrDynamic(this, args));  
-                    console.log('isStaticOrDynamic(this, args) single ----- ', isStaticOrDynamic(this, args));
-                }
-            }
+        methodName = match[1]; // e.g. "app.globFunc"
+        args = match[2];       // e.g. "123, true"
+
+        // Parse argument values (dynamic or static)
+        if (args) {
+            const splitArgs = args.split(',').map(arg => arg.trim());
+            argArray = splitArgs.map(arg => isStaticOrDynamic(this, arg));
         }
 
-        if (methodName) {
-            if (typeof this[methodName] === 'function') {
+        const parsedArgs = parseArgs(argArray, this);
 
-                let parsedArguments = parseArgs(argArray, this);//todo to return correct datae
-                return this[methodName](...parsedArguments); // Execute function with arguments
-                //    this[methodName](...argArray); // Execute function with arguments
-            } else {
-                console.warn(` [${this.tagName}] ${methodName} is not a function`);
+        // Detect dot path for global call, e.g. app.utils.formatDate()
+        const parts = methodName.split('.');
+        let context = this;
+        let fn = null;
+
+        if (parts.length > 1) {
+            context = window;
+            while (parts.length > 1) {
+                context = context[parts.shift()];
             }
+            fn = context[parts[0]];
+        } else {
+            fn = this[methodName];
+        }
+
+        if (typeof fn === 'function') {
+            return fn.apply(context, parsedArgs);
+        } else {
+            console.warn(`[${this.tagName}] ${methodName} is not a valid function`);
         }
     } else {
-        app.pushLog('detect_function_error', ` [${this.tagName}] ${methodName} is not a function`);
+        app.pushLog('detect_function_error', ` [${this.tagName}] ${methodKey} is not a valid function call`);
     }
 }
-
-
-
-

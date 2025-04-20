@@ -1,18 +1,16 @@
-import { updateNestedProperty } from './help-functions.js';
+import { isStaticOrDynamic, resolveDataPath, updateNestedProperty } from './help-functions.js';
 
-//execute method or changes data on events
-export default function eventHandler(eventData) {
+// Handles event logic: either updating data or calling a method
+export default function eventHandler(eventData, conditions = {}) {
 // console.log('eventData: ', eventData);
-
     if (eventData.includes('=')) {
-        //changing property value
+        // Set property: e.g. current_page='home'
         let [prop, new_value] = eventData.split('=').map(s => s.trim());
-        new_value = resolveDataPath(this, new_value);
+        // console.log('new_value ---- ', new_value);
+        new_value = isStaticOrDynamic(this, new_value);
         updateNestedProperty(this, prop, new_value);
     } else {
-        //execute function
-        this.executeMethod(eventData);
-
+        // Call function (local or global)
+        this.executeMethod(eventData, conditions);
     }
-
 }

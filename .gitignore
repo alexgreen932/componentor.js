@@ -21,10 +21,9 @@
 !dev/methods/**
 !dev/tools/
 !dev/tools/**
-!dev/app.js
 !dev/jet-dev.js
 !dev/com.js
-!dev/index.html
+
 
 
 

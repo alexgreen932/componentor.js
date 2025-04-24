@@ -1,10 +1,40 @@
 
- //returns dynamic data where obj is object, path is multi key like 'data.set.property'
+//returns dynamic data where obj is object, path is multi key like 'data.set.property'
 function resolveDataPath(obj, path) {
     if (!obj || typeof obj !== 'object') return undefined;
-    return path.split('.').reduce((acc, key) => acc && acc[key], obj);
+    return path.split('.').reduce((acc, key) => (acc != null ? acc[key] : undefined), obj);
 }
+
 export { resolveDataPath };
+
+export function resolveDynamicIndex(str, ctx) {
+	// Split the string by `.` but keep array access like `items[current]` intact
+	const parts = str.split('.');
+
+	let current = ctx;
+	for (let part of parts) {
+		if (!current) break;
+
+		// Handle array access like items[0] or items[current]
+		const match = part.match(/^([a-zA-Z0-9_$]+)\[([^\]]+)\]$/);
+		if (match) {
+			let base = match[1];         // "items"
+			let indexKey = match[2];     // "current" or "0"
+			let index = isStaticOrDynamic(ctx, indexKey); // resolves "current" => 0
+
+			current = current[base];
+			if (Array.isArray(current)) {
+				current = current[index];
+			} else {
+				current = undefined;
+			}
+		} else {
+			current = current[part];
+		}
+	}
+	return current;
+}
+
 
 
 export function removeQuotes(str) {
@@ -69,32 +99,69 @@ export function getElementsByAttributePrefix(prefixes, str, type = '*') {
 }
 
 
+export function updateNestedProperty(obj, path, value) {
+	const keys = path.split('.');
+	let target = obj;
 
-/**
- * Updates a nested property in an object based on a dot-notated key path.
- * If the path doesn't exist, it creates the necessary nested objects.
- *
- * @param {Object} obj - The object to update.
- * @param {string} keyPath - A dot-notated string representing the path to the property.
- * @param {*} newValue - The new value to set for the specified property.
- * @returns {void} This function doesn't return a value; it modifies the input object.
- */
-export function updateNestedProperty(obj, keyPath, newValue) {
-    const keys = keyPath.split('.'); // Split the key path into an array of keys
-    let current = obj;
+	for (let i = 0; i < keys.length - 1; i++) {
+		let key = keys[i];
 
-    // Traverse the object to the second-to-last key
-    for (let i = 0; i < keys.length - 1; i++) {
-        const key = keys[i];
-        if (!current[key] || typeof current[key] !== 'object') {
-            current[key] = {}; // Create a new object if the key doesn't exist
-        }
-        current = current[key];
-    }
+		// ✅ Check for dynamic index syntax like items[current]
+		const match = key.match(/^([a-zA-Z0-9_$]+)\[([^\]]+)\]$/);
+		if (match) {
+			const base = match[1]; // e.g. "items"
+			const indexKey = match[2]; // e.g. "current"
+			const index = isStaticOrDynamic(obj, indexKey); // resolve dynamic value
 
-    // Update the last key with the new value
-    current[keys[keys.length - 1]] = newValue;
+			target = target[base];
+			if (Array.isArray(target)) {
+				target = target[index];
+			} else {
+				console.warn(`updateNestedProperty: '${base}' is not an array`);
+				return;
+			}
+		} else {
+			// Standard object path
+			target = target[key];
+		}
+	}
+
+	const lastKey = keys[keys.length - 1];
+
+	// ✅ Final key: handle dynamic index if needed
+	const lastMatch = lastKey.match(/^([a-zA-Z0-9_$]+)\[([^\]]+)\]$/);
+	if (lastMatch) {
+		const base = lastMatch[1];
+		const indexKey = lastMatch[2];
+		const index = isStaticOrDynamic(obj, indexKey);
+
+		if (Array.isArray(target[base])) {
+			target[base][index] = value;
+		} else {
+			console.warn(`updateNestedProperty: '${base}' is not an array at end`);
+		}
+	} else {
+		// Standard assignment
+		target[lastKey] = value;
+	}
 }
+
+// export function updateNestedProperty(obj, keyPath, newValue) {
+//     const keys = keyPath.split('.'); // Split the key path into an array of keys
+//     let current = obj;
+
+//     // Traverse the object to the second-to-last key
+//     for (let i = 0; i < keys.length - 1; i++) {
+//         const key = keys[i];
+//         if (!current[key] || typeof current[key] !== 'object') {
+//             current[key] = {}; // Create a new object if the key doesn't exist
+//         }
+//         current = current[key];
+//     }
+
+//     // Update the last key with the new value
+//     current[keys[keys.length - 1]] = newValue;
+// }
 
 
 /**
@@ -110,7 +177,7 @@ export function isStaticOrDynamic(obj, value) {
     if (value.startsWith("'") && value.endsWith("'")) {
         value = value.slice(1, -1);
         return value;
-    } else if(!isNaN(value)){//if number
+    } else if (!isNaN(value)) {//if number
         return value;
     } else {
         return resolveDataPath(obj, value);
@@ -167,30 +234,30 @@ export function getMultiValue(value, component, alt) {
 
 
 //helper functions for debag, just colorize console.log and console.error messages
-export function cB(str, com = null){
+export function cB(str, com = null) {
     let tag = '';
-    if(com) tag = `[${com.tagName}]: `;
+    if (com) tag = `[${com.tagName}]: `;
     // console.log(`%c${tag+str}"`, 'background:#0d47a1; color: #fff; padding:3px;');
 }
-export function cG(str, com = null){
+export function cG(str, com = null) {
     let tag = '';
-    if(com) tag = `[${com.tagName}]: `;
+    if (com) tag = `[${com.tagName}]: `;
     // console.log(`%c${tag+str}"`, 'background:#004d40; color: #fff; padding:3px;');
 }
-export function cR(str, com = null){
+export function cR(str, com = null) {
     let tag = '';
-    if(com) tag = `[${com.tagName}]: `;
+    if (com) tag = `[${com.tagName}]: `;
     // console.log(`%c${tag+str}"`, 'background:#f00; color: #fff; padding:3px;');
 }
-export function cD(str, com = null){
+export function cD(str, com = null) {
     let tag = '';
-    if(com) tag = `[${com.tagName}]: `;
+    if (com) tag = `[${com.tagName}]: `;
     // console.log(`%c${tag + str}"`, 'background:#404550; color: #fff; padding:3px;');
 }
-export function cE(str, com = null){
+export function cE(str, com = null) {
     let tag = '';
-    if(com) tag = `[${com.tagName}]: `;
-    console.error(`%c${tag+str}"`, 'background:#ad1457; color: #fff; padding:3px; font-Weight:bold;');
+    if (com) tag = `[${com.tagName}]: `;
+    console.error(`%c${tag + str}"`, 'background:#ad1457; color: #fff; padding:3px; font-Weight:bold;');
 }
 
 

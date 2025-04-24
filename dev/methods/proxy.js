@@ -27,7 +27,7 @@ export default function proxy(data) {
           obj[key] = value;
   
           const fullPath = `${path}${key}`;
-          console.log(`[proxy] "${fullPath}" set to "${value}"`);
+          // console.log(`[proxy] "${fullPath}" set to "${value}"`);
           if (typeof app?.pushLog === 'function') {
             app.pushLog('proxy', `"${fullPath}" set to "${value}"`);
           }
@@ -35,11 +35,11 @@ export default function proxy(data) {
           if (typeof component.updated === 'function') {
             component.updated(fullPath, value);
           }
-          console.log(`[proxy] dispatching "data-updated" for "${fullPath}"`);
+          // console.log(`[proxy] dispatching "data-updated" for "${fullPath}"`);
   
           const event = new Event('data-updated', { bubbles: true });
           if (app?.debug) {
-            console.log(`[proxy] dispatching "data-updated" for "${fullPath}"`);
+            // console.log(`[proxy] dispatching "data-updated" for "${fullPath}"`);
           }
           component.dispatchEvent(event);
   

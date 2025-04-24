@@ -1,5 +1,6 @@
 // jModel.js
-import { updateNestedProperty, resolveDataPath} from './help-functions.js';
+import { updateNestedProperty, resolveDataPath, resolveDynamicIndex } from './help-functions.js';
+
 
 export default function jModel() {
 	const items = this.querySelectorAll('[j-model]');
@@ -7,7 +8,7 @@ export default function jModel() {
 
 	items.forEach(item => {
 		const keyPath = item.getAttribute('j-model');
-		let propValue = resolveDataPath(this, keyPath);
+		let propValue = resolveDynamicIndex(keyPath, this);
 
 		if (propValue !== undefined) {
 			item.value = propValue;
@@ -15,9 +16,10 @@ export default function jModel() {
 
 		item.addEventListener('input', (e) => {
 			let newValue = e.target.value;
-			updateNestedProperty(this, keyPath, newValue); // updates proxied this.keyPath
+			updateNestedProperty(this, keyPath, newValue); // keep this for now
 		});
 
 		item.removeAttribute('j-model');
 	});
 }
+

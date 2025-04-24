@@ -46,9 +46,7 @@ window.com = com;
 
 
 function pushLog(type, message) {
-// console.log('type: ', type);//current is proxy
-// console.log('watchers type inside of pushLog ', app.watchers[type]);//shows undefined
-  // console.log('push');
+
   if (app.watchers[type]) {
     // console.log(`watcher "${type}" is enabled ---------`);
     app.logs.push(`<span class="log-event">[${type}]</span> <span class="log-message">${message}</span>`);
@@ -69,8 +67,7 @@ window.devtools = () => app.devConsole();
 window.html = (strings, ...values) =>
   strings.reduce((out, str, i) => out + str + (values[i] ?? ''), '');
 
-// app.components
-// console.log('app.components: ', app.components);
+
 
 
 

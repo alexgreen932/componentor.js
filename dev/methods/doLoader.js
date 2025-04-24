@@ -29,6 +29,7 @@ export default function doLoader(tpl) {
             }
 
         } else {
+            //todo dev pushlog
             // optional fade-out logic for existing loaders (if needed)
         }
     });

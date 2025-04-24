@@ -1,6 +1,3 @@
-// com.js
-// Jet.js Component Definition System
-
 import * as componentMethods from './methods/index.js';
 import DebugTools from './functions/DebugTools.js';
 import { resolveDataPath } from './methods/help-functions.js';
@@ -94,7 +91,6 @@ function com(args) {
 
         //activate save data in localstorage if property provided
         if (args.saveLocally) {
-          console.log('args.saveLocally: ', args.saveLocally);
           const localArgs = typeof args.saveLocally === 'function' ? args.saveLocally.call(this) : args.saveLocally;
           this.setupLocalSave(localArgs);
         }
@@ -114,6 +110,36 @@ function com(args) {
         if (typeof args.connected === 'function') this.connected = args.connected;
 
         this.tpl = args.tpl || (() => `<div><strong>Component "${this.tagName}" template (tpl) is missing</strong></div>`);
+
+        //Slots support 
+        if (args.slots) {
+          this.slots = {};//create object
+          
+          const slotElements = this.querySelectorAll('slot[name]');
+          
+          slotElements.forEach(slot => {
+              const name = slot.getAttribute('name');
+              const value = slot.innerHTML.trim(); // inject slot content into data as default
+              if (name && value) {
+                this.slots[name] = slot.innerHTML.trim(); 
+              }
+          });
+      }
+        //Templates support 
+        if (args.templates) {
+          this.templates = {};//create object
+          
+          const templateElements = this.querySelectorAll('template[name]');
+
+          templateElements.forEach(template => {
+              const name = template.getAttribute('name');
+              const value = template.innerHTML.trim(); // inject template content into data as default
+              if (name && value) {
+                this.templates[name] = template.innerHTML.trim(); 
+              }
+          });
+      }
+      
         // 7. Prepare data + render component
 
         this.render();  // Do first render before mount
@@ -180,10 +206,11 @@ function com(args) {
       render() {
         let tpl = this.template();             // Get raw template string
         tpl = this.doLoader(tpl);              // Handle j-load
-        tpl = this.doAttr(tpl);                // Handle j-attr (if any)
         tpl = this.doFor(tpl);                 // Handle j-for loops
-        tpl = this.doIf(tpl);                  // Handle j-if conditions
+        tpl = this.doIf(tpl);  
+        tpl = this.doAttr(tpl);                // Handle j-attr (if any)                // Handle j-if conditions
         tpl = this.doInterpolation(tpl);       // Replace {{}} with actual data
+        // tpl = this.jHtml(tpl);      
 
         this.innerHTML = tpl;                  // Inject into DOM
         this.jModel();                         // Two-way binding support
@@ -203,7 +230,6 @@ function com(args) {
       e(eventName = this.r || 'data-updated') {
         const event = new Event(eventName, { bubbles: true });
         this.dispatchEvent(event);
-        console.log('event created ----- ', event);      
       }
 
     }

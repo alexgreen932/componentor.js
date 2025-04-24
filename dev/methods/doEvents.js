@@ -7,7 +7,9 @@ export default function doEvents(str = null) {
 
     this.querySelectorAll('[data-event]').forEach(item => {
         const rawEvent = item.getAttribute('data-event');
+        // console.log('rawEvent: ', rawEvent);
         const eventData = item.getAttribute('event-data');
+        // console.log('eventData: ', eventData);
 
         // Extract modifiers (e.g. .prevent, .stop) from event string
         const modifiers = [];

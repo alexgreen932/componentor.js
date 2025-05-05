@@ -1,8 +1,7 @@
 import { com } from './com.js';
-import { dev } from './tools/dev.js';
-import { devConsole } from './tools/devConsole.js';
-import inspectComponent from './tools/inspectComponent.js';
-import console from './tools/console.js';
+import jetConsole from './tools/jetConsole.js'
+// import fly from './fly.js';//todo
+import initializeAnimation from './extras/animate.js';
 
 /**
  * Logs a render update for a component.
@@ -17,29 +16,37 @@ function logComponentRender(name, renderTime) {
   }
 }
 
-//set com as global
-window.com = com;
+
 // Expose the app globally (default debug is off here)
 (function (global) {
   global.app = {
+    // defaultEvent = '',
+    reRender: true,
     com,
     components: [],
-    dev,
-    devConsole,
-    console,
+    dev: false,
     pushLog,
     watchers: {
       rerender: true,
-      data_changed: true,
+      data_changed: true,//??
       proxy: true,
       rerender: true,
       detect_function_error: true,
+      error: true,
+      Loading: true,
+      Loaded: true,
     },
     logs: [],
-    inspectComponent,
+    // inspectComponent,
     
   };
 })(window);
+
+
+//set main functions as global
+window.com = com;
+console.log('app components before console');
+window.jetConsole = jetConsole;
 
 
 // console.log('watchers type proxy ', app.watchers.proxy);//correct
@@ -57,15 +64,22 @@ function pushLog(type, message) {
   }
 }
 
-app.pushLog = pushLog;
+//Development tools in development yet
+app.pushLog = pushLog;//todo ?? rm
 //todo think to remove on prod
-window.devtools = () => app.devConsole();
+window.devtools = () => app.devConsole();//todo ?? rm
 
 
 //This function reconstructs the string and returns it untouched.
 //return html uses for vs plugin prettier only
 window.html = (strings, ...values) =>
   strings.reduce((out, str, i) => out + str + (values[i] ?? ''), '');
+
+//animation component 
+//class based
+initializeAnimation();
+//new component
+//fly(); //todo
 
 
 

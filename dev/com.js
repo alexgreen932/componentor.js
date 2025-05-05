@@ -17,20 +17,24 @@ function com(args) {
         this.args = args;
         this.methods = args.methods || {}; // Local methods
 
-        // Event listeners setup (if any)
-        this._boundListeners = [];
-        if (Array.isArray(args.listeners)) {
-          for (let [target, event, handlerName] of args.listeners) {
-            const fn = this.methods?.[handlerName] || (() => { });
-            if (typeof fn === 'function') {
-              const boundFn = fn.bind(this);
-              target.addEventListener(event, boundFn);
-              this._boundListeners.push([target, event, boundFn]);
-            }
-          }
+
+        //custom and default event for rerenderting
+        this.j_e = args.e || 'data-updated'; // custom event which element creates
+
+        //new rerendering
+        // Determine the event this component listens to for re-rendering
+        if (args.r) {
+          // If component explicitly defines 'r', always use it
+          this.j_r = args.r;
+        } else if (app.reRender) {
+          // If global reRender is true and no local override, use default event
+          this.j_r = 'data-updated';
+        } else {
+          // If global reRender is false and no local override, don't set j_r (no listener)
+          this.j_r = null;
         }
 
-        this.r = 'r' in args ? args.r : 'data-updated'; // Reactive event name
+
         this.$data = args.data || {};
 
 
@@ -53,7 +57,6 @@ function com(args) {
         });
 
         //new data
-
         // Reserved keys we should never overwrite with user data and user methods
         const reserved = [
           'args', 'methods', 'r', 'tpl', 'render', 'connectedCallback',
@@ -85,7 +88,7 @@ function com(args) {
 
 
         //used in child components
-        this.processProps();
+        this.j_props();
 
 
 
@@ -113,35 +116,10 @@ function com(args) {
 
         //Slots support 
         if (args.slots) {
-          this.slots = {};//create object
-          
-          const slotElements = this.querySelectorAll('slot[name]');
-          
-          slotElements.forEach(slot => {
-              const name = slot.getAttribute('name');
-              const value = slot.innerHTML.trim(); // inject slot content into data as default
-              if (name && value) {
-                this.slots[name] = slot.innerHTML.trim(); 
-              }
-          });
-      }
-        //Templates support 
-        if (args.templates) {
-          this.templates = {};//create object
-          
-          const templateElements = this.querySelectorAll('template[name]');
+          this.j_slots(args.slots);
+        }
 
-          templateElements.forEach(template => {
-              const name = template.getAttribute('name');
-              const value = template.innerHTML.trim(); // inject template content into data as default
-              if (name && value) {
-                this.templates[name] = template.innerHTML.trim(); 
-              }
-          });
-      }
-      
-        // 7. Prepare data + render component
-
+        //main element
         this.render();  // Do first render before mount
 
         // 9. Lifecycle: mount()
@@ -156,8 +134,8 @@ function com(args) {
 
 
         // 10. Setup global re-render listener if "r" is defined (default: 'data-updated')
-        if (this.r) {
-          document.addEventListener(this.r, () => {
+        if (this.j_r) {
+          document.addEventListener(this.j_r, () => {
             const start = performance.now();
             this.render();
             // console.log(`%c"[${this.tagName}]" reRendered data current_page is "${this.data.current_page}, title ia "${this.data.current_page_title}"`, 'background:#00f; color:#fff; padding:3px; font-weight:bold;');         
@@ -176,29 +154,31 @@ function com(args) {
           }
         });
         //end of constructor 
-      }
+      }//end of constructor
 
       // Native lifecycle hook: element added to DOM
       connectedCallback() {
         if (typeof this.connected === 'function') {
           this.connected();
         }
+
+        if (Array.isArray(this.args.listeners)) {
+          this._boundListeners = [];
+          for (let entry of this.args.listeners) {
+            this.jListener(...entry); // works for 3 or 4 args
+          }
+        }
+
       }
+
 
       // Native lifecycle hook: element removed from DOM
       disconnectedCallback() {
         if (typeof this.destroyed === 'function') {
           this.destroyed();
         }
-      
-        // Remove bound global event listeners
-        // if (Array.isArray(this._boundListeners)) {
-        //   for (let [target, event, fn] of this._boundListeners) {
-        //     target.removeEventListener(event, fn);
-        //   }
-        // }
       }
-      
+
 
       /**
        * Renders component HTML
@@ -207,7 +187,7 @@ function com(args) {
         let tpl = this.template();             // Get raw template string
         tpl = this.doLoader(tpl);              // Handle j-load
         tpl = this.doFor(tpl);                 // Handle j-for loops
-        tpl = this.doIf(tpl);  
+        tpl = this.doIf(tpl);
         tpl = this.doAttr(tpl);                // Handle j-attr (if any)                // Handle j-if conditions
         tpl = this.doInterpolation(tpl);       // Replace {{}} with actual data
         // tpl = this.jHtml(tpl);      
@@ -227,7 +207,7 @@ function com(args) {
       /**
        * Triggers reactivity event manually
        */
-      e(eventName = this.r || 'data-updated') {
+      e(eventName = this.j_r || 'data-updated') {
         const event = new Event(eventName, { bubbles: true });
         this.dispatchEvent(event);
       }
@@ -235,16 +215,20 @@ function com(args) {
     }
   );
 
-  // Add to debug panel if in dev mode
-  if (typeof app !== 'undefined' && app.devtoolsEnabled) {
-    app.components.push({
+  if (typeof app !== 'undefined' && app.dev) {
+    console.log('args.data ---- ', args.data);
+    let methods = args.methods ? Object.keys(args.methods) : null;
+    let comMainItems = {
       name: args.name,
-      data: args.data || {},
-      methods: args.methods ? Object.keys(args.methods) : [],
-      renders: 1
-    });
+      data: JSON.stringify(args.data) || {},
+      methods: JSON.stringify(methods),
+    };
+    console.log('comMainItems: ', comMainItems);
+    app.components.push(comMainItems);
   }
-}
+
+
+}//end of function com
 
 /**
  * Debug helper: Track render performance and count
@@ -256,13 +240,5 @@ function logComponentRender(name, renderTime) {
     comp.lastRenderTime = renderTime;
   }
 }
-
-// Restore Ctrl+Click inspect
-// doublicated
-// this.addEventListener('click', (e) => {
-//   if (e.ctrlKey && typeof app.inspectComponent === 'function') {
-//     app.inspectComponent(this);
-//   }
-// });
 
 export { com };

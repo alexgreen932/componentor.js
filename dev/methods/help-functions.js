@@ -1,42 +1,112 @@
 
-//returns dynamic data where obj is object, path is multi key like 'data.set.property'
-function resolveDataPath(obj, path) {
+// export function formatTime(ms) {
+//     const h = String(Math.floor(ms / 3600000)).padStart(2, '0');
+//     const m = String(Math.floor((ms % 3600000) / 60000)).padStart(2, '0');
+//     const s = String(Math.floor((ms % 60000) / 1000)).padStart(2, '0');
+//     const msLeft = String(ms % 1000).padStart(3, '0');
+//     return `${h}:${m}:${s}.${msLeft}`;
+// }
+export function formatTime(ms) {
+    const date = new Date(ms);
+    return date.toISOString().substr(11, 12); // "hh:mm:ss.sss"
+}
+
+/**
+ * Escapes single quotes and other risky characters
+ * @param {string} str
+ * @returns {string}
+ */
+export function j_escape(str) {
+        // Check for boolean literals
+        if (str === 'true') return true;
+        if (str === 'false') return false;
+    
+        // Check for numbers
+        if (!isNaN(str)) {
+            return Number(str);
+        }
+    return str.replace(/'/g, '&lsquo;');
+
+}
+/**
+ * Resolves a dot-path with optional array access like "items[current].title"
+ * @param {Object} obj - The base object to resolve from.
+ * @param {string} path - Path like "items[current].title" or "items[0].desc"
+ * @returns {*} - The resolved value or undefined
+ */
+export function resolveDataPath(obj, path) {
     if (!obj || typeof obj !== 'object') return undefined;
-    return path.split('.').reduce((acc, key) => (acc != null ? acc[key] : undefined), obj);
+
+    const parts = path.split('.');
+    let current = obj;
+
+    for (let part of parts) {
+        if (!current) break;
+
+        // Match array access like items[0] or items[current]
+        const match = part.match(/^([a-zA-Z0-9_$]+)\[([^\]]+)\]$/);
+        if (match) {
+            const baseKey = match[1];       // e.g., "items"
+            // console.log('baseKey: ', baseKey);
+            const indexKey = match[2];      // e.g., "0" or "current"
+            // console.log('indexKey: ', indexKey);
+
+            // 👇 Resolve the array using resolveDataPath — to support nested objects
+            const arr = resolveDataPath(current, baseKey);
+            // console.log('arr: ', arr);
+            if (!Array.isArray(arr)) {
+                console.warn(`resolveDataPath: '${baseKey}' is not an array.`);
+                return undefined;
+            }
+
+            const index = isStaticOrDynamic(obj, indexKey);
+            // console.log('[resolveDataPath] indexKey:', indexKey, '→ index:', index);
+
+            current = arr[index];
+        } else {
+            // Standard dot access
+            current = current[part];
+        }
+    }
+
+    return current;
 }
 
-export { resolveDataPath };
 
+/**
+ * Fallback resolver for paths with mixed dot/array access, similar to resolveDataPath.
+ * Mostly for legacy or one-off needs.
+ */
 export function resolveDynamicIndex(str, ctx) {
-	// Split the string by `.` but keep array access like `items[current]` intact
-	const parts = str.split('.');
+    const parts = str.split('.');
+    let current = ctx;
 
-	let current = ctx;
-	for (let part of parts) {
-		if (!current) break;
+    for (let part of parts) {
+        if (!current) break;
 
-		// Handle array access like items[0] or items[current]
-		const match = part.match(/^([a-zA-Z0-9_$]+)\[([^\]]+)\]$/);
-		if (match) {
-			let base = match[1];         // "items"
-			let indexKey = match[2];     // "current" or "0"
-			let index = isStaticOrDynamic(ctx, indexKey); // resolves "current" => 0
+        const match = part.match(/^([a-zA-Z0-9_$]+)\[([^\]]+)\]$/);
+        if (match) {
+            let base = match[1];
+            let indexKey = match[2];
+            let index = isStaticOrDynamic(ctx, indexKey);
 
-			current = current[base];
-			if (Array.isArray(current)) {
-				current = current[index];
-			} else {
-				current = undefined;
-			}
-		} else {
-			current = current[part];
-		}
-	}
-	return current;
+            current = current[base];
+            if (Array.isArray(current)) {
+                current = current[index];
+            } else {
+                current = undefined;
+            }
+        } else {
+            current = current[part];
+        }
+    }
+
+    return current;
 }
 
-
-
+/**
+ * Strips quotes from a string like "value" or 'value'
+ */
 export function removeQuotes(str) {
     if ((str.startsWith('"') && str.endsWith('"')) || (str.startsWith("'") && str.endsWith("'"))) {
         return str.slice(1, -1);
@@ -44,42 +114,36 @@ export function removeQuotes(str) {
     return str;
 }
 
-//returns correct type of value passed
+/**
+ * Attempts to parse a list of argument strings to real values.
+ * Handles dynamic lookups from context as well.
+ */
 export function parseArgs(argsArray, context) {
     if (!Array.isArray(argsArray)) return [];
 
     return argsArray.map(arg => {
-        // Already a boolean, number, or object — return as-is
         if (typeof arg !== 'string') return arg;
 
-        let raw = arg.trim();
+        const raw = arg.trim();
 
-        // Check if it's a dynamic data path
-        if (raw.match(/^[a-zA-Z_][a-zA-Z0-9_.]*$/)) {
+        // Resolve dynamic path
+        if (raw.match(/^[a-zA-Z_][a-zA-Z0-9_.\[\]]*$/)) {
             const value = resolveDataPath(context, raw);
             if (value !== undefined) return value;
         }
 
-        // Convert to boolean
+        // Primitives
         if (raw === 'true') return true;
         if (raw === 'false') return false;
-
-        // Convert to number
         if (!isNaN(raw) && raw !== '') return Number(raw);
 
-        // Strip quotes
-        if ((raw.startsWith('"') && raw.endsWith('"')) || (raw.startsWith("'") && raw.endsWith("'"))) {
-            return raw.slice(1, -1);
-        }
-
-        return raw;
+        return removeQuotes(raw);
     });
 }
 
-
-
-
-//select all elements started with any characters
+/**
+ * Finds DOM elements with attribute prefixes (like j- or prop:)
+ */
 export function getElementsByAttributePrefix(prefixes, str, type = '*') {
     const parser = new DOMParser();
     const doc = parser.parseFromString(str, 'text/html');
@@ -90,7 +154,7 @@ export function getElementsByAttributePrefix(prefixes, str, type = '*') {
         for (const attr of el.attributes) {
             if (prefixes.some(prefix => attr.name.startsWith(prefix))) {
                 matchedElements.push(el);
-                break; // Stop after the first matching attribute
+                break;
             }
         }
     });
@@ -98,171 +162,111 @@ export function getElementsByAttributePrefix(prefixes, str, type = '*') {
     return { doc, matchedElements };
 }
 
-
+/**
+ * Updates a nested property, including support for array access like items[current]
+ */
 export function updateNestedProperty(obj, path, value) {
-	const keys = path.split('.');
-	let target = obj;
+    const keys = path.split('.');
+    let target = obj;
 
-	for (let i = 0; i < keys.length - 1; i++) {
-		let key = keys[i];
+    for (let i = 0; i < keys.length - 1; i++) {
+        let key = keys[i];
 
-		// ✅ Check for dynamic index syntax like items[current]
-		const match = key.match(/^([a-zA-Z0-9_$]+)\[([^\]]+)\]$/);
-		if (match) {
-			const base = match[1]; // e.g. "items"
-			const indexKey = match[2]; // e.g. "current"
-			const index = isStaticOrDynamic(obj, indexKey); // resolve dynamic value
+        const match = key.match(/^([a-zA-Z0-9_$]+)\[([^\]]+)\]$/);
+        if (match) {
+            const base = match[1];
+            const indexKey = match[2];
+            const index = isStaticOrDynamic(obj, indexKey);
 
-			target = target[base];
-			if (Array.isArray(target)) {
-				target = target[index];
-			} else {
-				console.warn(`updateNestedProperty: '${base}' is not an array`);
-				return;
-			}
-		} else {
-			// Standard object path
-			target = target[key];
-		}
-	}
+            target = target[base];
+            if (Array.isArray(target)) {
+                target = target[index];
+            } else {
+                console.warn(`updateNestedProperty: '${base}' is not an array`);
+                return;
+            }
+        } else {
+            target = target[key];
+        }
+    }
 
-	const lastKey = keys[keys.length - 1];
+    const lastKey = keys[keys.length - 1];
+    const lastMatch = lastKey.match(/^([a-zA-Z0-9_$]+)\[([^\]]+)\]$/);
+    if (lastMatch) {
+        const base = lastMatch[1];
+        const indexKey = lastMatch[2];
+        const index = isStaticOrDynamic(obj, indexKey);
 
-	// ✅ Final key: handle dynamic index if needed
-	const lastMatch = lastKey.match(/^([a-zA-Z0-9_$]+)\[([^\]]+)\]$/);
-	if (lastMatch) {
-		const base = lastMatch[1];
-		const indexKey = lastMatch[2];
-		const index = isStaticOrDynamic(obj, indexKey);
-
-		if (Array.isArray(target[base])) {
-			target[base][index] = value;
-		} else {
-			console.warn(`updateNestedProperty: '${base}' is not an array at end`);
-		}
-	} else {
-		// Standard assignment
-		target[lastKey] = value;
-	}
+        if (Array.isArray(target[base])) {
+            target[base][index] = value;
+        } else {
+            console.warn(`updateNestedProperty: '${base}' is not an array at end`);
+        }
+    } else {
+        target[lastKey] = value;
+    }
 }
 
-// export function updateNestedProperty(obj, keyPath, newValue) {
-//     const keys = keyPath.split('.'); // Split the key path into an array of keys
-//     let current = obj;
-
-//     // Traverse the object to the second-to-last key
-//     for (let i = 0; i < keys.length - 1; i++) {
-//         const key = keys[i];
-//         if (!current[key] || typeof current[key] !== 'object') {
-//             current[key] = {}; // Create a new object if the key doesn't exist
-//         }
-//         current = current[key];
-//     }
-
-//     // Update the last key with the new value
-//     current[keys[keys.length - 1]] = newValue;
-// }
-
-
 /**
- * Checks if a value is static or dynamic.
- * Static values are either enclosed in single quotes or numeric.
- * Dynamic values are resolved using the provided object.
- * @param {*} obj 
- * @param {*} value 
- * @returns 
+ * Determines if a value is a static string/number or a dynamic path, and returns the actual value
  */
 export function isStaticOrDynamic(obj, value) {
     value = value.trim();
-    if (value.startsWith("'") && value.endsWith("'")) {
-        value = value.slice(1, -1);
-        return value;
-    } else if (!isNaN(value)) {//if number
-        return value;
-    } else {
-        return resolveDataPath(obj, value);
-    }
-}
 
-/**
- * 
- * @param {*} value //key or value
- * @param {*} component // this
- * @param {*} alt //alt object eg iterated contend object
- * @returns 
- */
-export function getMultiValue(value, component, alt) {
-    // console.log('getMultiValue called');
-    value = value.trim();
-
-    // Check if it's a static string (wrapped in single quotes)
+    // Check for static quoted strings
     if (value.startsWith("'") && value.endsWith("'")) {
-        return value.slice(1, -1); // Remove the quotes and return the string
-        // console.log('single quotes');
+        const val = value.slice(1, -1);
+        if (val === 'true') return true;
+        if (val === 'false') return false;
+        return val;
     }
 
-    // Check if it's a number
+    // Check for boolean literals
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+
+    // Check for numbers
     if (!isNaN(value)) {
         return Number(value);
     }
 
-    // If it starts with "method.", assume it's a method call
+    // Try dynamic path lookup
+    const resolved = resolveDataPath(obj, value);
+    // console.log(`[isStaticOrDynamic] resolved "${value}" to:`, resolved);
+
+    if (resolved === undefined) {
+        console.warn(`[isStaticOrDynamic] could not resolve dynamic path "${value}"`);
+    }
+
+    return resolved;
+}
+
+
+/**
+ * Gets a dynamic value from either main component or alt context
+ */
+export function getMultiValue(value, component, alt) {
+    value = value.trim();
+
+    if (value.startsWith("'") && value.endsWith("'")) {
+        return value.slice(1, -1);
+    }
+
+    if (!isNaN(value)) {
+        return Number(value);
+    }
+
     if (value.startsWith("method.")) {
-        let methodName = value.slice(7); // Remove "method."
+        let methodName = value.slice(7);
         if (typeof component[methodName] === "function") {
-            return component[methodName](); // Call the method
+            return component[methodName]();
         }
     }
 
-    // console.log('value: ', value);
-    // console.log('alt: ', alt);
-    // console.log('alt.key: ', alt.key);
-    // If it's an iterated object property (alt.key exists)
-    //todo check seems not used, then rm
     if (alt && value.startsWith(alt.key + ".")) {
-
-        let keyPath = value.slice(alt.key.length + 1); //todo // Remove 'e.' prefix//wrong as it can be not only 'e. but 'item.' etc
-        return resolveDataPath(alt.obj, keyPath); // Get from iterated object
+        let keyPath = value.slice(alt.key.length + 1);
+        return resolveDataPath(alt.obj, keyPath);
     }
 
-    // console.log('component: ', component);
-    // console.log('--------value: ', value);
-    // Otherwise, try resolving it from the component (element's data)
     return resolveDataPath(component, value);
 }
-
-
-
-//helper functions for debag, just colorize console.log and console.error messages
-export function cB(str, com = null) {
-    let tag = '';
-    if (com) tag = `[${com.tagName}]: `;
-    // console.log(`%c${tag+str}"`, 'background:#0d47a1; color: #fff; padding:3px;');
-}
-export function cG(str, com = null) {
-    let tag = '';
-    if (com) tag = `[${com.tagName}]: `;
-    // console.log(`%c${tag+str}"`, 'background:#004d40; color: #fff; padding:3px;');
-}
-export function cR(str, com = null) {
-    let tag = '';
-    if (com) tag = `[${com.tagName}]: `;
-    // console.log(`%c${tag+str}"`, 'background:#f00; color: #fff; padding:3px;');
-}
-export function cD(str, com = null) {
-    let tag = '';
-    if (com) tag = `[${com.tagName}]: `;
-    // console.log(`%c${tag + str}"`, 'background:#404550; color: #fff; padding:3px;');
-}
-export function cE(str, com = null) {
-    let tag = '';
-    if (com) tag = `[${com.tagName}]: `;
-    console.error(`%c${tag + str}"`, 'background:#ad1457; color: #fff; padding:3px; font-Weight:bold;');
-}
-
-
-
-
-
-
-

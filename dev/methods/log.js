@@ -1,27 +1,19 @@
-// methods/log.js
-export default function log(message = '', data = null, style = 'blue', type = 'log') {
-	if (!window.app?.debug) return;
+export default function log(key, msg = '', data = '', time = null) {
+    if (!app.dev && !app.watchers[key]) return;
 
-	const tag = `[${this?.name || this?.tagName?.toLowerCase() || 'component'}]: `;
+    const ignoreList = ['develop-console', 'j-logs', 'j-components', 'j-watchers'];
+    const tag = this?.tagName?.toLowerCase?.() || 'unknown';
+    if (ignoreList.includes(tag)) return;
 
-	const styles = {
-		b: 'background:#00ace6; color: #fff; padding:3px;font-weight:bold;',
-		blue: 'background:#00ace6; color: #fff; padding:3px;font-weight:bold;',
-		r: 'background:#f00; color: #fff; padding:3px;;font-weight:bold;',
-		red: 'background:#f00; color: #fff; padding:3px;;font-weight:bold;',
-		d: 'background:#404550; color: #fff; padding:3px;;font-weight:bold;',
-		dark: 'background:#404550; color: #fff; padding:3px;;font-weight:bold;',
-		error: 'background:#ad1457; color: #fff; padding:3px; font-weight:bold;;font-weight:bold;',
-	};
+    const log = {
+        tag,
+        key,
+        msg,
+        data,
+        time: time || new Date().toLocaleTimeString('en-GB') + '.' + String(new Date().getMilliseconds()).padStart(3, '0'),
+    };
 
-	const logStyle = styles[style] || styles.blue;
-
-	if (type === 'warn') {
-		console.warn(`%c${tag}${message}`, logStyle, data || '');
-	} else if (type === 'error') {
-		console.error(`%c${tag}${message}`, logStyle, data || '');
-	} else {
-		console.log(`%c${tag}${message}`, logStyle, data || '');
-	}
+    app.logs.unshift(log);
+    const event = new Event('j_log', { bubbles: true });
+    this.dispatchEvent(event);
 }
-

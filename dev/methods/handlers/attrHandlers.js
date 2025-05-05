@@ -1,4 +1,4 @@
-import { resolveDataPath } from '../help-functions.js';
+import { isStaticOrDynamic, resolveDataPath } from '../help-functions.js';
 
 
 export function handleAt(el, attr, value, context) {
@@ -12,22 +12,22 @@ export function handleAt(el, attr, value, context) {
 		el.setAttribute('data-prop', prop);
 		el.setAttribute('data-newvalue', val);
 	} else {
-        //process function call
+		//process function call
 		const match = value.match(/^([a-zA-Z0-9_]+)\((.*?)\)$/);
 		if (match) {
 			const methodName = match[1];
 			let args = null;
 			if (match[2]) {
 				args = match[2];
-                el.setAttribute('data-args', args);//set data-args only if it has
+				el.setAttribute('data-args', args);//set data-args only if it has
 			}
-            //old way
+			//old way
 			// if (match[2] && match[2].includes(',')) {
 			// 	args = match[2].split(',').map(arg => context.resolveDataPath(this, arg)).join(', ');
-            //     console.log('multi args ', args);
+			//     console.log('multi args ', args);
 			// } else if (match[2]) {
 			// 	args = context.resolveDataPath(this, match[2]);
-            //     console.log('single arg ', args);
+			//     console.log('single arg ', args);
 			// }
 			el.setAttribute('data-event', event);
 			el.setAttribute('data-method', methodName);
@@ -40,23 +40,20 @@ export function handleAt(el, attr, value, context) {
 	context.doEvents();
 }
 
+export function handleHtml(el, attr, value, context) {
+	el.innerHTML = isStaticOrDynamic(context, value);
+}
+
+//todo rm
 export function handleEl(el, attr, value, context) {
 	el.setAttribute('data-parent', context.tagName.toLowerCase());
 }
 
+export function handleGrid(el, attr, value, context) {
+	el.setAttribute('parent-data', context.tagName.toLowerCase());
+}
 export function handleProp(el, attr, value, context) {
 	el.setAttribute('parent-data', context.tagName.toLowerCase());
 }
 
-export function handleColon(el, attr, value, context) {
-	const key = attr.name.slice(1);
-	if (key === 'class') {
-		value.split(',').map(cls => cls.trim()).forEach(cls => {
-			el.classList.add(resolveDataPath(context, cls));
-		});
-	} else {
-		// Handle dynamic attrs
-		// el.setAttribute(key, context.data[value] || value); // Your original note
-	}
-}
 

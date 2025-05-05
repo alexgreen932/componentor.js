@@ -1,4 +1,4 @@
-import { resolveDataPath } from './help-functions.js'
+import { resolveDataPath, formatTime } from './help-functions.js'
 
 export default function doLoader(tpl) {
     const parser = new DOMParser();
@@ -10,29 +10,28 @@ export default function doLoader(tpl) {
     items.forEach(item => {
         const conditionPath = item.getAttribute('j-load');
         const conditionValue = resolveDataPath(this, conditionPath);
-
         const isLoading = conditionValue === false || conditionValue === null || conditionValue === '';
-        const defaultLoader = `<div style="opacity:0;transition:opacity 0.4s ease;display:flex;justify-content:center;padding:1rem">Loading...</div>`;
-        const loaderHTML = app.loader || defaultLoader;
-
-        item.removeAttribute('j-load'); // cleanup the directive
+        const loaderHTML = app.loader || `<div style="opacity:0;transition:opacity 0.4s ease;display:flex;justify-content:center;padding:1rem">Loading...</div>`;
+        item.removeAttribute('j-load');
 
         if (isLoading) {
-            // Replace content with loader
             item.innerHTML = loaderHTML;
             const loaderEl = item.firstElementChild;
+            this._loadStart = performance.now(); // mark start time
+            this.log('Loading...');
 
             if (loaderEl) {
-                // Force reflow so opacity transition works
                 void loaderEl.offsetWidth;
                 loaderEl.style.opacity = '1';
             }
 
         } else {
-            //todo dev pushlog
-            // optional fade-out logic for existing loaders (if needed)
+            const duration = performance.now() - (this._loadStart || 0);
+            const takenTime = formatTime(duration);
+            this.log('Loaded', `Loading time is ${takenTime}`, '', takenTime);
         }
     });
 
     return doc.body.innerHTML;
 }
+

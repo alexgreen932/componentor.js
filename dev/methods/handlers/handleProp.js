@@ -2,6 +2,7 @@ import { resolveDataPath } from '../help-functions.js';
 
 
 export function handleProp(el, attr, value, context) {
+console.log('el--- ', el);
 	const event = attr.name.slice(1);
 	el.setAttribute('element-event', event);
 	el.setAttribute('event-data', value);

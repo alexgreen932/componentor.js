@@ -3,21 +3,23 @@ import { handleEl, handleColon, handleAt, handleProp } from './handlers/attrHand
 
 
 export default function jHtml(str) {
-	const parser = new DOMParser();
-	const doc = parser.parseFromString(str, 'text/html');
-	const elements = doc.querySelectorAll('[j-html]');
-	console.log('elements: ', elements);
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(str, 'text/html');
+    const elements = doc.querySelectorAll('[j-html]');
+    console.log('elements: ', elements);
 
-	elements.forEach(el => {
-		let content = el.getAttribute('j-html');
-		el.innerHTML = cleanedHtml(content);
-	});
-	return { doc};
+    elements.forEach(el => {
+        let content = el.getAttribute('j-html');
+        el.innerHTML = cleanedHtml(content);
+    });
+    return { doc };
 }
 
 // doInterpolation.js
 
 import { resolveDataPath } from './help-functions.js'
+
+//todo check and remove
 
 // Escape potentially dangerous HTML/script code for safe rendering inside interpolation
 function escapeDangerCode(str) {

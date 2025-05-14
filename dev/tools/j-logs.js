@@ -30,8 +30,6 @@ com({
     },
     created() {
         this.logs = app.logs;
-        console.log('logs ------ ', this.logs[0]);
-        // console.log('app---------', app.logs);
     },
     mount() {
         j_rerenderLogs(this);

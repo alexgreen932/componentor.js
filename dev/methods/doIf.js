@@ -36,6 +36,7 @@ export default function doIf(tpl, alt = null) {
             condition = resolveDataPath(this, leftPath);
             value = isStaticOrDynamic(this, rightValue);
 
+
             //double chech for quotes
             const clean = str =>
                 typeof str === 'string' && str.startsWith("'") && str.endsWith("'")
@@ -45,7 +46,14 @@ export default function doIf(tpl, alt = null) {
             condition = clean(condition);
             value = clean(value);
 
+            // console.log('leftPath ----- ', leftPath);
+            // console.log('condition: ', condition);
+            // console.log('rightValue: ', rightValue);
+            // console.log('value: ', value);
 
+            //re rendering
+            this.data_update_checker( condition, leftPath );
+            this.data_update_checker( value, rightValue );
 
             // Apply condition based on the operator
             if (operator === '==') {

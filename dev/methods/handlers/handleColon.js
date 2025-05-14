@@ -14,15 +14,15 @@ export default function handleColon(el, attr, value, context) {
                 el.classList.add(processedVal);
             }
         });
-    } 
-    
+    }
+
     else if (key === 'style') {
         value = value.trim();
-        
+
         // 1. Inline object syntax? (starts with { and ends with })
         if (value.startsWith('{') && value.endsWith('}')) {
             const inner = value.slice(1, -1).trim(); // remove { and }
-            
+
             inner.split(';').map(stylePair => stylePair.trim()).forEach(pair => {
                 if (!pair) return;
                 let [prop, val] = pair.split(':').map(p => p.trim());
@@ -63,8 +63,8 @@ export default function handleColon(el, attr, value, context) {
                     }
                 });
             });
-        } 
-        
+        }
+
         // 3. Normal object (style1) or string ("background-color: red")
         else {
             let resolvedValue = isStaticOrDynamic(context, value);
@@ -88,7 +88,7 @@ export default function handleColon(el, attr, value, context) {
                         }
                     });
                 });
-            } 
+            }
             else if (typeof resolvedValue === 'string') {
                 // It's a normal style string (background-color: red; font-size: 14px;)
                 resolvedValue.split(';').map(stylePair => stylePair.trim()).forEach(pair => {
@@ -108,8 +108,8 @@ export default function handleColon(el, attr, value, context) {
                 });
             }
         }
-    } 
-    
+    }
+
     else {
         // Handle other attributes (standard or custom like uk-scrollspy)
         let processedVal = isStaticOrDynamic(context, value);

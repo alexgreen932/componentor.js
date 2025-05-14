@@ -1,5 +1,6 @@
 import { handleAt, handleProp, handleGrid, handleHtml } from './handlers/attrHandlers.js';
 import handleColon from './handlers/handleColon.js';
+import { isStaticOrDynamic } from './help-functions.js';
 
 // Setup handlers
 const handlers = {
@@ -49,6 +50,10 @@ export default function doAttr(tpl) {
             const value = attr.value.trim();
             for (const prefix in handlers) {
                 if (attr.name.startsWith(prefix)) {
+
+                    //re rendering checker for all, it checks if attr.value changeg
+                    this.data_update_checker(isStaticOrDynamic(this, attr.value), attr.value);
+
                     handlers[prefix](el, attr, value, this); // 'this' = component context
                     break;
                 }

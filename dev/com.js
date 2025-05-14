@@ -178,10 +178,10 @@ function com(args) {
       render() {
         let tpl = this.template();             // Get raw template string
         tpl = this.doLoader(tpl);              // Handle j-load
-        tpl = this.doFor(tpl);                 // Handle j-for loops
+        tpl = this.doFor(tpl);                 // Handle j-for loops //re render added
         tpl = this.doIf(tpl);
-        tpl = this.doAttr(tpl);                // Handle j-attr (if any)                // Handle j-if conditions
-        tpl = this.doInterpolation(tpl);       // Replace {{}} with actual data
+        tpl = this.doAttr(tpl);                // Handle j-attr (if any) 
+        tpl = this.doInterpolation(tpl);       // Replace {{}} with actual data //re render added
         // tpl = this.jHtml(tpl);      
 
         this.innerHTML = tpl;                  // Inject into DOM

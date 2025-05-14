@@ -21,14 +21,7 @@ export function handleAt(el, attr, value, context) {
 				args = match[2];
 				el.setAttribute('data-args', args);//set data-args only if it has
 			}
-			//old way
-			// if (match[2] && match[2].includes(',')) {
-			// 	args = match[2].split(',').map(arg => context.resolveDataPath(this, arg)).join(', ');
-			//     console.log('multi args ', args);
-			// } else if (match[2]) {
-			// 	args = context.resolveDataPath(this, match[2]);
-			//     console.log('single arg ', args);
-			// }
+
 			el.setAttribute('data-event', event);
 			el.setAttribute('data-method', methodName);
 		} else {

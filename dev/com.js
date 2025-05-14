@@ -17,28 +17,22 @@ function com(args) {
         this.args = args;
         this.methods = args.methods || {}; // Local methods
 
+        this.$data = args.data || {};
 
-        //custom and default event for rerenderting
-        this.j_e = args.e || 'data-updated'; // custom event which element creates
+        //NEW REACTIVITY SYSTEM
+        // 👇 ADDED: Flag to allow controlled rerenders
+        this.j_isNotRerendered = true;
+        this.j_isRendering = false;
 
-        //new rerendering
-        // Determine the event this component listens to for re-rendering
+        //forced rerender, if true renders by event 'data-updated'
         if (args.r) {
           // If component explicitly defines 'r', always use it
-          this.j_r = args.r;
-        } else if (app.reRender) {
-          // If global reRender is true and no local override, use default event
           this.j_r = 'data-updated';
-        } else {
-          // If global reRender is false and no local override, don't set j_r (no listener)
-          this.j_r = null;
         }
 
 
-        this.$data = args.data || {};
 
-
-        //css add style if property args.css is provided
+        //css add style if property args.css is provided //todo improve
         if (args.css) {
           const id = `jet-style-${args.name}`;
           if (!document.getElementById(id)) {
@@ -51,10 +45,13 @@ function com(args) {
 
 
 
-        // 2. Bind shared utility methods from './methods/index.js'
+        // Bind shared utility methods from './methods/index.js'
         Object.entries(componentMethods).forEach(([name, fn]) => {
           this[name] = fn.bind(this);
         });
+
+
+
 
         //new data
         // Reserved keys we should never overwrite with user data and user methods
@@ -82,6 +79,8 @@ function com(args) {
             this[name] = fn.bind(this);
           } else {
             //todo add pusLog
+            this.log('Error', `Name "${name}" is Jet reserved name, chose another`);
+            // console.log(`Name "${name}" is Jet reserved name, chose another`);
           }
 
         });
@@ -119,6 +118,13 @@ function com(args) {
           this.j_slots(args.slots);
         }
 
+        //wrapper support
+        if (args.wrapper) {
+          this.innerHTML
+          this.j_inner = this.innerHTML;
+          // console.log('this.j_inner: ', this.j_inner);
+        }
+
         //main element
         this.render();  // Do first render before mount
 
@@ -132,20 +138,6 @@ function com(args) {
         }
 
 
-
-        // 10. Setup global re-render listener if "r" is defined (default: 'data-updated')
-        if (this.j_r) {
-          document.addEventListener(this.j_r, () => {
-            const start = performance.now();
-            this.render();
-            // console.log(`%c"[${this.tagName}]" reRendered data current_page is "${this.data.current_page}, title ia "${this.data.current_page_title}"`, 'background:#00f; color:#fff; padding:3px; font-weight:bold;');         
-            const end = performance.now();
-            //TODO DEBAG
-            if (app.devtoolsEnabled) {
-              logComponentRender(this.tagName, end - start);
-            }
-          });
-        }
 
         // 11. Debug inspect mode (Ctrl+Click)
         this.addEventListener('click', (e) => {
@@ -216,14 +208,12 @@ function com(args) {
   );
 
   if (typeof app !== 'undefined' && app.dev) {
-    console.log('args.data ---- ', args.data);
     let methods = args.methods ? Object.keys(args.methods) : null;
     let comMainItems = {
       name: args.name,
       data: JSON.stringify(args.data) || {},
       methods: JSON.stringify(methods),
     };
-    console.log('comMainItems: ', comMainItems);
     app.components.push(comMainItems);
   }
 

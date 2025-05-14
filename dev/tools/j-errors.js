@@ -3,17 +3,22 @@ import _ from './languages/index.js';
 import { j_rerenderLogs } from './helper.js';
 
 
+
+setInterval(() => {
+    // console.log('log 42 ', app.watchers);
+}, 2000);
+
 com({
-    name: 'j-logs',
+    name: 'j-errors',
     data: {
-        logs: null,
+        errors: null,
     },
     r: true,
     tpl() {
         return html` 
-        <h3>${_('logs')}</h3>
-        <ul j-load="logs" class="j_logs">
-            <li j-for="logs">
+        <h3>${_('errors')}</h3>
+        <ul j-load="errors" class="j_errors">
+            <li j-for="errors">
                 <span class="j_log_name">{{propToText('[e.key]')}}</span>
                 <span class="j_log_tag">[e.tag]</span>
                 <span class="j_log_msg">[e.msg]</span>
@@ -26,15 +31,11 @@ com({
         propToText(str) {
             return str.replace(/_/g, ' ');
         }
-
     },
     created() {
-        this.logs = app.logs;
-        console.log('logs ------ ', this.logs[0]);
-        // console.log('app---------', app.logs);
+        this.errors = app.errors;
     },
-    mount() {
+    mount(){
         j_rerenderLogs(this);
     }
-})
-
+});

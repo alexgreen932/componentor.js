@@ -1,42 +1,52 @@
-import { resolveDataPath, cB } from './help-functions.js';
+import { isStaticOrDynamic } from './help-functions.js';
 
-// console.log('process props loaded');
+
 export default function processProps() {
-    // console.log('process props loaded inside');
 
     let parentElement = this.getAttribute('parent-data');
 
     if (!parentElement) {
-        //todo log
-        console.warn(`[${this.tagName}] Parent component has no data, thought it can be normally.`);
-        return;//if has no parent element attr means no attr 'el' or startsWith 'el:'
+        // Info: Standalone components (without parent) can still have static props.
+        console.warn(`[${this.tagName}] Parent component not found. Assuming static props if provided.`);
+        // Don't return yet — allow processing static (#) attributes.
     }
 
-    let parent = this.closest(parentElement);
-    console.log('parent: ', parent);
-    console.log('this.attributes: ', this.attributes);
+    let parent = parentElement ? this.closest(parentElement) : null;
+
     for (const attr of this.attributes) {
-    console.log('attr ------ ', attr);
-        //single or multiple props 'el' or any other, but with attribute starting with 'el:'
+        // === 1. Handle "prop:" attributes (dynamic or static) ===
         if (attr.name.startsWith('prop:')) {
             const key = attr.name.slice(5);
-            console.log('key: ', key);
-            const dynamicData = resolveDataPath(parent, attr.value);
-            console.log('attr.value: ', attr.value);
-            console.log('dynamicData: ', dynamicData);
-
+            const dynamicData = isStaticOrDynamic(parent, attr.value);
 
             if (dynamicData !== undefined) {
                 this[key] = this.proxy(dynamicData || {});
-                //add found keys to dynamicKeys
-                // this.dynamicKeys.push(key);
+                // You can later track dynamicKeys if needed.
             } else {
                 console.warn(`[${this.tagName}] Failed to resolve prop "${key}" from path "${attr.value}"`);
             }
         }
-        //todo uncomment on prod
-        // el.removeAttribute('parent-data');
-        // el.removeAttribute(attr.name);
+
+        // === 2. Handle "#" attributes (static props for standalone use) ===
+        if (attr.name.startsWith('#')) {
+            const key = attr.name.slice(1);
+            const value = attr.value;
+
+            // Check if it's static (number, boolean, string in quotes)
+            const staticValue = isStaticOrDynamic(null, value); 
+            // Note: passing null to parent, because standalone means no parent needed.
+
+            if (staticValue !== undefined) {
+                this[key] = staticValue;
+            } else {
+                console.warn(`[${this.tagName}] Static prop "#${key}" is not valid static value: ${value}`);
+            }
+        }
+
+        // === 3. Future: optionally remove processed attributes ===
+        // this.removeAttribute('parent-data');
+        // this.removeAttribute(attr.name);
     }
 }
+
 

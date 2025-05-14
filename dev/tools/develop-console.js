@@ -1,34 +1,51 @@
 import { com } from '../com.js';
-import  './j-components.js';
-import  './j-logs.js';
-import  './j-watchers.js';
+// import * from '../jet-dev.js';
+import './j-components.js';
+import './j-logs.js';
+import './j-watchers.js';
+import './j-errors.js';
+import './custom-data.js';
+
+import _ from './languages/index.js';
+
+
 
 const data = {
     title: 'My app',
     tabs: [
-        { title: 'App Components', slug: 'info', icon: 'ℹ️' },
-        { title: 'Logs', slug: 'logs', icon: '🖹' },
-        { title: 'Watchers', slug: 'watchers', icon: '👁' },
-        { title: 'Settings', slug: 'settings', icon: '⚙' },
-        { title: 'Close', slug: null, icon: '❌' },
+        { title: _('coms'), slug: 'info', icon: 'ℹ️' },
+        { title: _('logs'), slug: 'logs', icon: '🖹' },
+        { title: _('errors'), slug: 'errors', icon: '⚠' },
+        { title: _('watchers'), slug: 'watchers', icon: '👁' },
+        // { title: _('custom_data'), slug: 'custom_data', icon: '👁' },
+        // { title: _('settings'), slug: 'settings', icon: '⚙' },
+        { title: _('close'), slug: false, icon: '❌' },
     ],
     state: {
-        current: null,
-        current: 'watchers',//testing
+        current: false,
     },
+    error_log: null
 
     // show_cls: 'info',
 }
 
 
 
+
 com({
     name: 'develop-console',
     data: data,
+    r: true,
+    saveLocally() {
+        return [
+            ['state', 'j_dev_console_state']
+        ];
+    },
     tpl() {
         return html`    
             <div id="debug-panel" class="{{show()}}">
                 <div class="db-icons">
+                    <span j-if="error_log" class="de-error-badge" @click="tab('errors')">{{error_log}}</span>
                     <template j-for="tabs">
                         <span class="de" @click="tab('[e.slug]')">[e.icon]</span>
                     </template>
@@ -44,34 +61,21 @@ com({
                             <j-components class="j_inherit" j-if="state.current=='info'"></j-components>
                             <j-logs class="j_inherit" j-if="state.current=='logs'"></j-logs>
                             <j-watchers class="j_inherit" j-if="state.current=='watchers'"></j-watchers>
-                            ---
+                            <j-errors class="j_inherit" j-if="state.current=='errors'"></j-errors>
+                            <custom-data class="j_inherit" j-if="state.current=='custom_data'"></custom-data>
                         </div>
-                    </div>
-                    <div j-if="state.current==watchers">
-                        watchers
-                    </div>
-                    <div j-if="state.current==logs">
-                        log
-                    </div>
-                    <div j-if="state.current==settings">
-                        settings
                     </div>
                 </div>
             
             </div>
-            <textarea>{{state.current}}</textarea>
-            <textarea>{{func()}}</textarea>
+            <input j-model="state.current" />
+            <input j-model="error_log" />
+            <input value="{{show()}}" />
         `
     },
     methods: {
         tab(s) {
-            if (s === this.state.current) {
-                this.state.current = null;
-            } else {
-                this.state.current = s;
-            }
-            // console.log('s ---- ', s);
-
+            this.state.current = s;
         },
         show() {
             if (this.state.current) {
@@ -82,12 +86,10 @@ com({
         },
         func() { return 'return method func' },
     },
-    mount() {
-        // console.log('this.data ---------------- ', this.data);
+    created() {
+        // console.log('app.errors.length: ', app.errors.length);
+        if ( app.errors.length ) {
+            this.error_log = app.errors.length;
+        }
     },
-
-    // saveLocally() {
-    //     return [this.data, 'savedDevSettings'];
-    // }
-    // css:'.test-h{color:#f00}'
 })

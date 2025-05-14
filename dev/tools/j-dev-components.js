@@ -3,28 +3,25 @@ import { com } from '../com.js';
 
 
 com({
-    name: 'j-components',
+    name: 'j-dev-components',
     data: {
         components: null,
     },
-    r: true,
     tpl() {
         return html` 
         <h3>App Components</h3>
-        <ul j-load="components" class="dl-components">
+        <ul j-load="components" class="">
             <li j-for="components">
-            <div class="dl-com-name dl-collapse">
                 <label>Component:</label>
-                <span>[e.name]</span>
-            </div>
-            <div class="dl-com-data dl-collapse">
+                <span class="jd-com-name">"[e.name]"</span>
+                <div class="jd-collapse">
                     <label>Data:</label>
-                    <span>[e.data]</span>
-            </div>
-            <div class="dl-com-methods dl-collapse">
+                    <span class="jd-com-name">[e.data]</span>
+                </div>
+                <div class="jd-collapse">
                     <label>Methods:</label>
-                    <span">[e.methods]</span>
-            </div>
+                    <span class="jd-com-name">[e.methods]</span>
+                </div>
             </li>
         </ul>
          `
@@ -32,13 +29,13 @@ com({
     methods: {
         showData(d) {
             //todo beatify
-            // console.log('d---- ', d);
+            console.log('d---- ', d);
 
         },
     },
     created() {
         this.components = app.components;
-        // console.log('components ------ ', this.components[0]);
+        console.log('components ------ ', this.components[0]);
         // console.log('app---------', app.components);
     }
 })

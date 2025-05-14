@@ -23,7 +23,7 @@ export default function doIf(tpl, alt = null) {
         if (raw.match(/^([a-zA-Z0-9_]+)\((.*?)\)$/)) {
             condition = this.executeMethod(raw);
 
-        // 2. If it's a comparison expression
+            // 2. If it's a comparison expression
         } else if (raw.includes('==') || raw.includes('!==')) {
             // Split into left-hand side and right-hand side
             const [left, right] = raw.split(/==|!==/);
@@ -36,10 +36,16 @@ export default function doIf(tpl, alt = null) {
             condition = resolveDataPath(this, leftPath);
             value = isStaticOrDynamic(this, rightValue);
 
-            // Debugging logs
-            // console.log('j-if expression:', raw);
-            // console.log('→ condition resolved:', condition);
-            // console.log('→ value resolved:', value);
+            //double chech for quotes
+            const clean = str =>
+                typeof str === 'string' && str.startsWith("'") && str.endsWith("'")
+                    ? str.slice(1, -1)
+                    : str;
+            
+            condition = clean(condition);
+            value = clean(value);
+
+
 
             // Apply condition based on the operator
             if (operator === '==') {
@@ -48,13 +54,13 @@ export default function doIf(tpl, alt = null) {
                 if (condition == value) item.remove();
             }
 
-        // 3. Simple condition (e.g. j-if="isVisible")
+            // 3. Simple condition (e.g. j-if="isVisible")
         } else {
             condition = resolveDataPath(this, raw);
             if (!condition) item.remove();
         }
 
-        item.removeAttribute('j-if'); // Clean up
+        // item.removeAttribute('j-if'); // Clean up
     });
 
     return doc.body.innerHTML;

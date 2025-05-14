@@ -6,8 +6,9 @@ export default function j_props() {
     let parentElement = this.getAttribute('parent-data');
 
     if (!parentElement) {
+        //todo dev
         // Info: Standalone components (without parent) can still have static props.
-        console.warn(`[${this.tagName}] Parent component not found. Assuming static props if provided.`);
+        //console.warn(`[${this.tagName}] Parent component not found. Assuming static props if provided.`);
         // Don't return yet — allow processing static (#) attributes.
     }
 

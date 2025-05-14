@@ -103,8 +103,7 @@ export default function doFor(str) {
 
 // 🔁 New helper to safely replace [e], [e[0]], [e.title], [i], etc.
 function replaceBrackets(text, key, idx, item, index, component = null) {
-console.log('text: ', text);
-console.trace();
+// console.log('text: ', text);
 // console.log(`[${component}] text ---`, text);
     return text.replace(/\[([^\[\]]+(\[[^\[\]]*\])?[^\[\]]*)\]/g, (match, expr) => {
         try {

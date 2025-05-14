@@ -1,5 +1,6 @@
 // jModel.js
-import { updateNestedProperty, resolveDataPath, resolveDynamicIndex } from './help-functions.js';
+import { updateNestedProperty, resolveDynamicIndex } from './help-functions.js';
+// import { isStaticOrDynamic } from './help-functions.js';
 
 
 export default function jModel() {

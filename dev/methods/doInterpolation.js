@@ -24,23 +24,12 @@ export default function doInterpolation(tpl) {
 			return this.executeMethod(path);
 		}
 
+		this.data_update_checker( resolveDynamicIndex(path, this), path );
+
 		const resolvedValue = resolveDynamicIndex(path, this);
 		return resolvedValue !== undefined ? escapeDangerCode(String(resolvedValue)) : '';
 	});
 }
 
-// export default function doInterpolation(tpl) {
-//     if (!tpl.includes('{{')) return tpl;
-//     return tpl.replace(/{{(.*?)}}/g, (_, path) => {
-//         //if function
-//         if (path.match(/^([a-zA-Z0-9_]+)\((.*?)\)$/)) {
-//             return this.executeMethod(path);       
-//         }
-//         //if dynamic data
-//         const resolvedValue = resolveDataPath(this, path.trim());
-
-//         return resolvedValue !== undefined ? resolvedValue : '';
-//     });
-// }
 
 

@@ -13,9 +13,10 @@ export default function proxy(data) {
           return createProxy(value, `${path}${key}.`);
         }
         if (!(key in obj)) {
-          const logMsg = `[proxy] missed property "${path}${key}", returning default ""`;
-          console.warn(logMsg);
-          component.log('prop_missed', logMsg);//todo dev
+          //todo dev
+          // const logMsg = `[proxy] missed property "${path}${key}", returning default ""`;
+          // console.warn(logMsg);
+          // component.log('prop_missed', logMsg);//todo dev
           return '';
         }
         return value;
@@ -31,14 +32,29 @@ export default function proxy(data) {
           //todo dev maybe?
         }
 
+        component.log('Data_changed', `Property "${key}" updated with value "${value}"`);
+        // console.log(`Property "${key}" updated with value "${value}"`);        
+
+        // event for data_update_checker, and forced re render if prop r = true
+        const e = new Event('data-updated', { bubbles: true });
+        component.dispatchEvent(e);
+
+          // console.log(`[${component.tagName}] j_r is "${component.j_r}"`);    
+
+        //forced rerender, if true renders by event 'data-updated'
+        if (component.j_r) { 
+          component.log('Re_render', `Component Re Rendered Due to its settings "Forced Re Rendering"`);     
+          component.render();
+        }
+
         // Dispatch single or multiple events
         //refactored
-        const events = Array.isArray(component.j_r) ? component.j_r : [component.j_r];
-        events.forEach(ev => {
-          const event = new Event(ev, { bubbles: true });
-          component.dispatchEvent(event);
-          component.log('proxy', `Updated property "${key}" with value "${value}" at event "${ev}"`);
-        });
+        // const events = Array.isArray(component.j_r) ? component.j_r : [component.j_r];
+        // events.forEach(ev => {
+        //   const event = new Event(ev, { bubbles: true });
+        //   component.dispatchEvent(event);
+        //   component.log('Proxy', `Updated property "${key}" with value "${value}" at event "${ev}"`);
+        // });
 
         return true;
       }

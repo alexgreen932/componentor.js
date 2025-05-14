@@ -1,37 +1,52 @@
-// import { getMultiValue, removeQuotes } from './help-functions.js'
-
 export default function setupLocalSave(saveArgs) {
-    if (!Array.isArray(saveArgs)) return;
-    let [target, key, event = 'data-updated'] = saveArgs;
-    if (!key || typeof key !== 'string') return;
-  
-    // Try to restore data from localStorage on init
+  const groups = Array.isArray(saveArgs[0]) ? saveArgs : [saveArgs];
+
+  for (let [prop, key, event = 'data-updated'] of groups) {
+    if (!prop || !key) continue;
+
+    const target = this[prop];
+    if (typeof target === 'undefined') {
+      // this.log('LocalStorage', `Property "${prop}" does not exist on this component`);
+      continue;
+    }
+
+    // Restore data from localStorage
     const saved = localStorage.getItem(key);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        Object.assign(target, parsed); // merge with existing
+        if (typeof parsed === 'object') {
+          Object.assign(this[prop], parsed);
+        } else {
+          this[prop] = parsed;
+        }
+        this.log('LocalStorage', `Found saved data "${saved}" for "${key}"`);
       } catch (e) {
-        console.warn(`Failed to parse saved data for key "${key}"`);
+        // this.log('LocalStorage', `Failed to parse saved data for "${key}"`);
       }
     }
-  
+
     // Auto-save on event
     document.addEventListener(event, () => {
       try {
-        localStorage.setItem(key, JSON.stringify(target));
+        const value = JSON.stringify(this[prop]);
+        localStorage.setItem(key, value);
+        this.log('LocalStorage', `Property "${prop}" saved in localStorage with value "${value}"`);
       } catch (e) {
-        console.warn(`Failed to save data to localStorage key "${key}"`);
+        // this.log('LocalStorage', `Failed to save "${prop}" to localStorage`);
       }
     });
-  
-    // Optional: method to manually trigger save
-    this.saveToLocal = () => {
+
+    // Optional manual save
+    if (!this.saveToLocal) this.saveToLocal = {};
+    this.saveToLocal[prop] = () => {
       try {
-        localStorage.setItem(key, JSON.stringify(target));
+        const value = JSON.stringify(this[prop]);
+        localStorage.setItem(key, value);
+        // this.log('LocalStorage', `Property "${prop}" manually saved with value "${value}"`);
       } catch (e) {
-        console.warn(`Failed to manually save data to localStorage key "${key}"`);
+        // this.log('LocalStorage', `Manual save failed for "${prop}"`);
       }
     };
   }
-  
+}

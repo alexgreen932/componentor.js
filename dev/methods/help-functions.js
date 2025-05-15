@@ -6,6 +6,8 @@
 //     const msLeft = String(ms % 1000).padStart(3, '0');
 //     return `${h}:${m}:${s}.${msLeft}`;
 // }
+
+
 export function formatTime(ms) {
     const date = new Date(ms);
     return date.toISOString().substr(11, 12); // "hh:mm:ss.sss"
@@ -212,6 +214,12 @@ export function updateNestedProperty(obj, path, value) {
  */
 export function isStaticOrDynamic(obj, value) {
     value = value.trim();
+
+    //scip if function
+    // if (value.match(/^([a-zA-Z0-9_.]+)\((.*?)\)$/g)) {
+    //     console.log(`value "${value}" is a method`);        
+    //     return;
+    // }
 
     // Check for static quoted strings
     if (value.startsWith("'") && value.endsWith("'")) {

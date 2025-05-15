@@ -39,10 +39,12 @@ export default function proxy(data) {
         const e = new Event('data-updated', { bubbles: true });
         component.dispatchEvent(e);
 
-          // console.log(`[${component.tagName}] j_r is "${component.j_r}"`);    
+        
+        component.j_deb('com-for', [ [component.j_r, 'this.j_r'] ]);
 
         //forced rerender, if true renders by event 'data-updated'
         if (component.j_r) { 
+        console.log('component.j_r ------------ ', component.j_r);
           component.log('Re_render', `Component Re Rendered Due to its settings "Forced Re Rendering"`);     
           component.render();
         }

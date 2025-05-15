@@ -2,22 +2,18 @@ import { handleAt, handleProp, handleGrid, handleHtml } from './handlers/attrHan
 import handleColon from './handlers/handleColon.js';
 import { isStaticOrDynamic } from './help-functions.js';
 
-// Setup handlers
+// Define handler prefixes
 const handlers = {
-    'prop:': handleProp, // For prop:
-    'p:': handleProp, // For prop:
-    '#': handleProp,    // For grid-like things (if you use #:)
-    ':': handleColon,    // For dynamic attribute binding
-    'j-html': handleHtml,// For inserting HTML
-    '@': handleAt,       // For event listeners
+
+    'p:': handleProp,
+    '#': handleProp,
+    ':': handleColon,
+    'j-html': handleHtml,
+    '@': handleAt,
 };
 
 /**
- * Find all elements with attributes starting with known prefixes
- * @param {Array} prefixes 
- * @param {String} str 
- * @param {String} type 
- * @returns {Object}
+ * Collects elements with attributes like ":class", "j-html", etc.
  */
 function getElementsByAttributePrefix(prefixes, str, type = '*') {
     const parser = new DOMParser();
@@ -29,7 +25,7 @@ function getElementsByAttributePrefix(prefixes, str, type = '*') {
         for (const attr of el.attributes) {
             if (prefixes.some(prefix => attr.name.startsWith(prefix))) {
                 matchedElements.push(el);
-                break; // Only need to add each element once
+                break;
             }
         }
     });
@@ -38,12 +34,15 @@ function getElementsByAttributePrefix(prefixes, str, type = '*') {
 }
 
 /**
- * Process all special attributes in the template
- * @param {String} tpl 
- * @returns {String}
+ * Main attribute processor for all dynamic bindings like :class, j-html, etc.
  */
 export default function doAttr(tpl) {
-    const { doc, matchedElements } = getElementsByAttributePrefix(['prop:', ':', '@', 'j-html', 'p:', '#'], tpl);
+    const { doc, matchedElements } = getElementsByAttributePrefix(
+        [':', '@', 'j-html', 'p:', '#'],
+        tpl
+    );
+
+
 
     matchedElements.forEach(el => {
         Array.from(el.attributes).forEach(attr => {
@@ -51,10 +50,16 @@ export default function doAttr(tpl) {
             for (const prefix in handlers) {
                 if (attr.name.startsWith(prefix)) {
 
-                    //re rendering checker for all, it checks if attr.value changeg
-                    this.data_update_checker(isStaticOrDynamic(this, attr.value), attr.value);
+                    //exclude props attrs starting with 'prop:' & 'p:'
+                    if ( !attr.name.startsWith('p:') ) {
+                        // 👇 ADDED: only track values that are not plain static (e.g., j-html="html")
+                        if (!value.startsWith("'") && !value.startsWith('"')) {
+                            this.data_update_checker(isStaticOrDynamic(this, value), value);
+                        }
+                    }
 
-                    handlers[prefix](el, attr, value, this); // 'this' = component context
+
+                    handlers[prefix](el, attr, value, this);
                     break;
                 }
             }

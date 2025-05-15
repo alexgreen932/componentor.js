@@ -13,7 +13,7 @@ export default function _(v) {
     } else if (en[v]) {
         return en[v];
     } else {
-        console.error(`CREATE - "${v}"`);
+        console.warn(`%c CREATE - "${v}"`, 'background:#8e24aa; color:#fff; padding:3px; font-weight:bold;');
         return v;
     }
 }

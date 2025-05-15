@@ -4,6 +4,7 @@ import './j-components.js';
 import './j-logs.js';
 import './j-watchers.js';
 import './j-errors.js';
+import './j-warns.js';
 import './custom-data.js';
 
 import _ from './languages/index.js';
@@ -16,6 +17,7 @@ const data = {
         { title: _('coms'), slug: 'info', icon: 'ℹ️' },
         { title: _('logs'), slug: 'logs', icon: '🖹' },
         { title: _('errors'), slug: 'errors', icon: '⚠' },
+        { title: _('Warnings'), slug: 'warns', icon: '⚠' },
         { title: _('watchers'), slug: 'watchers', icon: '👁' },
         // { title: _('custom_data'), slug: 'custom_data', icon: '👁' },
         // { title: _('settings'), slug: 'settings', icon: '⚙' },
@@ -24,7 +26,8 @@ const data = {
     state: {
         current: false,
     },
-    error_log: null
+    error_log: null,
+    warn_log: null
 
     // show_cls: 'info',
 }
@@ -46,15 +49,16 @@ com({
             <div id="debug-panel" class="{{show()}}">
                 <div class="db-icons">
                     <span j-if="error_log" class="de-error-badge" @click="tab('errors')">{{error_log}}</span>
+                    <span j-if="warn_log" class="de-warn-badge" @click="tab('warns')">{{warn_log}}</span>
                     <template j-for="tabs">
-                        <span class="de" @click="tab('[e.slug]')">[e.icon]</span>
+                        <span j-if="showIf('[e.slug]')" class="de" @click="tab('[e.slug]')">[e.icon]</span>
                     </template>
                 </div>
                 <div class="debug-window db-dark db-bottom-right db-large ">
                     <div class="db-inner">
                         <div class="db-inner-icons">
                             <template j-for="tabs">
-                                <span class="de" @click="tab('[e.slug]')">[e.title]</span>
+                                <span j-if="showIf('[e.slug]')" class="de" @click="tab('[e.slug]')">[e.title]</span>
                             </template>
                         </div>
                         <div class="db-inner-data">
@@ -62,6 +66,7 @@ com({
                             <j-logs class="j_inherit" j-if="state.current=='logs'"></j-logs>
                             <j-watchers class="j_inherit" j-if="state.current=='watchers'"></j-watchers>
                             <j-errors class="j_inherit" j-if="state.current=='errors'"></j-errors>
+                            <j-warns class="j_inherit" j-if="state.current=='warns'"></j-warns>
                             <custom-data class="j_inherit" j-if="state.current=='custom_data'"></custom-data>
                         </div>
                     </div>
@@ -77,6 +82,23 @@ com({
         tab(s) {
             this.state.current = s;
         },
+        showIf(slug) {
+            
+            switch (slug) {
+                case 'errors':
+                    if (this.error_log) {
+                        return true;
+                    }
+                    break;
+                case 'warns':
+                    if (this.warn_log) {
+                        return true;
+                    }
+                    break;
+                default:
+                return true;
+            }
+        },
         show() {
             if (this.state.current) {
                 return 'console-active';
@@ -88,8 +110,13 @@ com({
     },
     created() {
         // console.log('app.errors.length: ', app.errors.length);
-        if ( app.errors.length ) {
+        //error counter
+        if (app.errors.length) {
             this.error_log = app.errors.length;
+        }
+        //important warns counter
+        if (app.warns.length) {
+            this.warn_log = app.warns.length;
         }
     },
 })

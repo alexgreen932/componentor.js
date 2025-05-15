@@ -24,12 +24,6 @@ function com(args) {
         this.j_isNotRerendered = true;
         this.j_isRendering = false;
 
-        //forced rerender, if true renders by event 'data-updated'
-        if (args.r) {
-          // If component explicitly defines 'r', always use it
-          this.j_r = 'data-updated';
-        }
-
 
 
         //css add style if property args.css is provided //todo improve
@@ -49,6 +43,12 @@ function com(args) {
         Object.entries(componentMethods).forEach(([name, fn]) => {
           this[name] = fn.bind(this);
         });
+
+        //forced rerender, if true renders by event 'data-updated'
+        if (args.r) {
+          // If component explicitly defines 'r', always use it
+          this.j_r = 'data-updated';
+        }
 
 
 

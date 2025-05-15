@@ -15,20 +15,7 @@ export default function j_props() {
     let parent = parentElement ? this.closest(parentElement) : null;
 
     for (const attr of this.attributes) {
-        // prop: ------------
-        if (attr.name.startsWith('prop:')) {
-            const key = attr.name.slice(5);
-            const dynamicData = isStaticOrDynamic(parent, attr.value);
-
-            if (dynamicData !== undefined) {
-                this[key] = this.proxy(dynamicData || {});
-                // You can later track dynamicKeys if needed.
-            } else {
-                console.warn(`[${this.tagName}] Failed to resolve prop "${key}" from path "${attr.value}"`);
-            }
-        }
-
-        // p: ------------------
+        //props 'p:' ------------------
         if (attr.name.startsWith('p:')) {
             const key = attr.name.slice(2);
             const value = attr.value;
@@ -36,6 +23,15 @@ export default function j_props() {
             // Check if it's static (number, boolean, string in quotes)
            
             const dynamicData = isStaticOrDynamic(parent, attr.value);
+
+            // this.j_deb('com-attr2', [ [dynamicData] ]);
+            
+            if ( typeof dynamicData == 'string') {;
+               this.log('Warn', `Prop "${key}" is a string - "${dynamicData}". It is recommended to use an Object or Array for props. You can have problem with reactivity and two way binding. String props will be supported in future versions.`) 
+               console.warn('Warn', `Prop "${key}" is a string - "${dynamicData}". It is recommended to use an Object or Array for props. You can have problem with reactivity and two way binding. String props will be supported in future versions.`) 
+            } 
+
+
             // Note: passing null to parent, because standalone means no parent needed.
 
             if (dynamicData !== undefined) {

@@ -34,6 +34,8 @@ export default function doFor(str) {
             arr = forValue;
         }
 
+        // this.j_deb('com-for', [ [evalArray, 'on load'], [resolveDataPath(this, arr), 'array key'] ]);
+
         const evalArray = resolveDataPath(this, arr);
         if (!Array.isArray(evalArray)) return;
 

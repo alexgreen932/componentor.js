@@ -2,74 +2,63 @@ import { resolveDataPath, removeQuotes, isStaticOrDynamic } from './help-functio
 
 /**
  * Processes j-if conditions in the template HTML string.
- * Removes elements based on the evaluation result of their condition.
- * 
- * @param {string} tpl - The HTML string of the template.
- * @param {string|null} alt - Optional fallback (currently unused).
- * @returns {string} - The modified HTML with j-if conditions applied.
+ * Supports method calls, comparisons, or single conditions.
  */
 export default function doIf(tpl, alt = null) {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(tpl, 'text/html');
-    const items = doc.querySelectorAll('[j-if]');
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(tpl, 'text/html');
+  const items = doc.querySelectorAll('[j-if]');
 
-    if (items.length === 0) return tpl;
+  if (items.length === 0) return tpl;
 
-    items.forEach(item => {
-        const raw = item.getAttribute('j-if').trim();
-        let condition, value;
+  items.forEach(item => {
+    const raw = item.getAttribute('j-if').trim();
+    let condition, value;
 
-        // 1. If it's a method call like myMethod(123), execute it directly
-        if (raw.match(/^([a-zA-Z0-9_]+)\((.*?)\)$/)) {
-            condition = this.executeMethod(raw);
+    // 1. If method call: @click="someMethod(1)"
+    if (/^([a-zA-Z0-9_]+)\((.*?)\)$/.test(raw)) {
+      condition = this.executeMethod(raw);
+      if (!condition) item.remove();
 
-            // 2. If it's a comparison expression
-        } else if (raw.includes('==') || raw.includes('!==')) {
-            // Split into left-hand side and right-hand side
-            const [left, right] = raw.split(/==|!==/);
-            const operator = raw.includes('!==') ? '!==' : '==';
+    // 2. If comparison: j-if="a == b" or "a !== 'x'"
+    } else if (raw.includes('==') || raw.includes('!==')) {
+      const [left, right] = raw.split(/==|!==/);
+      const operator = raw.includes('!==') ? '!==' : '==';
 
-            const leftPath = left.replace('!', '').trim();
-            const rightValue = right.trim();
+      const leftPath = left.trim().replace(/^!/, '');
+      const rightPath = right.trim();
 
-            // Resolve both left and right sides properly
-            condition = resolveDataPath(this, leftPath);
-            value = isStaticOrDynamic(this, rightValue);
+      const leftValue = isStaticOrDynamic(this, leftPath);
+      const rightValue = isStaticOrDynamic(this, rightPath);
 
+      const clean = str =>
+        typeof str === 'string' && str.startsWith("'") && str.endsWith("'")
+          ? str.slice(1, -1)
+          : str;
 
-            //double chech for quotes
-            const clean = str =>
-                typeof str === 'string' && str.startsWith("'") && str.endsWith("'")
-                    ? str.slice(1, -1)
-                    : str;
-            
-            condition = clean(condition);
-            value = clean(value);
+      const l = clean(leftValue);
+      const r = clean(rightValue);
 
-            // console.log('leftPath ----- ', leftPath);
-            // console.log('condition: ', condition);
-            // console.log('rightValue: ', rightValue);
-            // console.log('value: ', value);
+      // 👇 ADDED: watch both sides of the expression
+      this.data_update_checker(l, leftPath);
+      this.data_update_checker(r, rightPath);
 
-            //re rendering
-            this.data_update_checker( condition, leftPath );
-            this.data_update_checker( value, rightValue );
+      // evaluate
+      if (operator === '==') {
+        if (l != r) item.remove();
+      } else if (operator === '!==') {
+        if (l == r) item.remove();
+      }
 
-            // Apply condition based on the operator
-            if (operator === '==') {
-                if (condition != value) item.remove();
-            } else if (operator === '!==') {
-                if (condition == value) item.remove();
-            }
+    // 3. Simple flag: j-if="isVisible"
+    } else {
+      const val = isStaticOrDynamic(this, raw);
+      this.data_update_checker(val, raw);
+      if (!val) item.remove();
+    }
 
-            // 3. Simple condition (e.g. j-if="isVisible")
-        } else {
-            condition = resolveDataPath(this, raw);
-            if (!condition) item.remove();
-        }
+    // item.removeAttribute('j-if'); // optional
+  });
 
-        // item.removeAttribute('j-if'); // Clean up
-    });
-
-    return doc.body.innerHTML;
+  return doc.body.innerHTML;
 }

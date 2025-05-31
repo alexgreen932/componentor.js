@@ -40,6 +40,7 @@ export default function executeMethod(methodKey, conditions = {}) {
             console.warn(`[${this.tagName}] ${methodName} is not a valid function`);
         }
     } else {
-        app.pushLog('detect_function_error', ` [${this.tagName}] ${methodKey} is not a valid function call`);
+        this.log('Error', `${methodKey} is not a valid function call`);//todo fix, do not shown in jetConsole errors
+        console.error('Error', ` [${this.tagName}] ${methodKey} is not a valid function call`);
     }
 }

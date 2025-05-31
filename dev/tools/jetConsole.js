@@ -1,8 +1,9 @@
-// import { app } from '../jet-dev.js';
+
 import './develop-console.js';
 
 export default function jetConsole() {
   app.dev = true;
+  console.log('console loaded-----------');  
 
   // Wait for both DOM and custom element definition
   document.addEventListener("DOMContentLoaded", () => {

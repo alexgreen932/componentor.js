@@ -18,7 +18,7 @@ export { default as setupLocalSave } from './setupLocalSave.js';
 export { default as j_slots } from './j_slots.js';
 export { default as data_update_checker } from './data_update_checker.js';
 export { default as j_deb } from './j_deb.js';
-// export { default as d } from './d.js';//TODO rm file as will
+
 
 
 

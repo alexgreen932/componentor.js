@@ -24,7 +24,12 @@ function com(args) {
         this.j_isNotRerendered = true;
         this.j_isRendering = false;
 
-
+        //forced rerender, if true renders by event 'data-updated'
+        if (args.r) {
+          // If component explicitly defines 'r', always use it
+          this.j_r = 'data-updated';
+          // this.j_deb('com-for', [ [this.j_r, 'this.j_r'] ]);
+        }
 
         //css add style if property args.css is provided //todo improve
         if (args.css) {
@@ -37,27 +42,17 @@ function com(args) {
           }
         }
 
-
-
         // Bind shared utility methods from './methods/index.js'
         Object.entries(componentMethods).forEach(([name, fn]) => {
           this[name] = fn.bind(this);
         });
-
-        //forced rerender, if true renders by event 'data-updated'
-        if (args.r) {
-          // If component explicitly defines 'r', always use it
-          this.j_r = 'data-updated';
-        }
-
-
 
 
         //new data
         // Reserved keys we should never overwrite with user data and user methods
         const reserved = [
           'args', 'methods', 'r', 'tpl', 'render', 'connectedCallback',
-          'disconnectedCallback', 'e', 'log', 'l', 'proxy', 'querySelector',
+          'disconnectedCallback', 'e', 'log', 'jContent', 'proxy', 'querySelector',
           'querySelectorAll', 'jModel', ...Object.keys(componentMethods)
         ];
 
@@ -86,10 +81,10 @@ function com(args) {
         });
 
 
+        this.j_props_arr = []; //dev op
+
         //used in child components
         this.j_props();
-
-
 
         //activate save data in localstorage if property provided
         if (args.saveLocally) {
@@ -121,7 +116,7 @@ function com(args) {
         //wrapper support
         if (args.wrapper) {
           this.innerHTML
-          this.j_inner = this.innerHTML;
+          this.jContent = this.innerHTML;
           // console.log('this.j_inner: ', this.j_inner);
         }
 
@@ -138,15 +133,30 @@ function com(args) {
         }
 
 
-
-        // 11. Debug inspect mode (Ctrl+Click)
+        // 11. Debug inspect mode (Ctrl+Click)//TODO dev with new functs
         this.addEventListener('click', (e) => {
           if (app.devtoolsEnabled && e.ctrlKey) {
             app.inspectComponent(this);
           }
         });
-        //end of constructor 
-      }//end of constructor
+
+
+        //dev op - jetConsloe components info
+        //new ver
+
+        if (typeof app !== 'undefined' && app.dev) {
+          let methods = args.methods ? Object.keys(args.methods) : null;
+          let comMainItems = {
+            name: args.name,
+            data: JSON.stringify(args.data) || 'no data',
+            props: JSON.stringify(this.j_props_arr) || 'no props',
+            methods: JSON.stringify(methods) || 'no methods',
+          };
+          app.components.push(comMainItems);
+        }
+
+      }//end of constructor ----------------------------------------
+
 
       // Native lifecycle hook: element added to DOM
       connectedCallback() {
@@ -187,6 +197,13 @@ function com(args) {
         this.innerHTML = tpl;                  // Inject into DOM
         this.jModel();                         // Two-way binding support
         this.doEvents();                       // Add event listeners (@click, etc.)
+
+        //remove 
+        // Store children before replacing
+        const children = [...this.childNodes];
+
+        // Replace the custom element with its content
+        this.replaceWith(...children);
       }
 
       /**
@@ -199,26 +216,18 @@ function com(args) {
       /**
        * Triggers reactivity event manually
        */
+      //TODO RM IF MOT USED
       e(eventName = this.j_r || 'data-updated') {
         const event = new Event(eventName, { bubbles: true });
         this.dispatchEvent(event);
       }
 
-    }
+    }//end of class----------------------
   );
 
-  if (typeof app !== 'undefined' && app.dev) {
-    let methods = args.methods ? Object.keys(args.methods) : null;
-    let comMainItems = {
-      name: args.name,
-      data: JSON.stringify(args.data) || {},
-      methods: JSON.stringify(methods),
-    };
-    app.components.push(comMainItems);
-  }
 
 
-}//end of function com
+}//end of function com -------------------
 
 /**
  * Debug helper: Track render performance and count
